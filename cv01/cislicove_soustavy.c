@@ -61,19 +61,34 @@ int main(int argv, char **args) {
         printf("\n");
         print_digits(change(12345, 16));
     }
+    if(DEBUG){ // testing digit printing
+        struct Array test = {50, (number *) malloc(sizeof(number) * 50)};
+        for (int i = 0; i < 50; i++) {
+            test.data[i] = i;
+        }
+        print_digits(test);
+    }
     return 0;
+
 }
 
 /*
  * Prints digits using ASCII 0-9 then A-Z
  */
 void print_digits(struct Array digits) {
+    int limit = 35;
     number size = digits.size;
     for (number i = 0; i < size; i++) {
         number digit = digits.data[i];
+        if(digit>limit){
+            printf("\nError number should not be bigger then %d\n",limit);
+        }
         // if digit < 10 then add only 48 since 0-9 ASCII codes are 48-57
         // else add 64 A-Z
-        printf("%c", digit + (digit > 9 ? 64 : 48));
+        printf("%c", digit + (digit > 9 ? 'A' - 10 : '0'));
+        if(DEBUG){
+            printf("=%d\n",digit);
+        }
     }
 }
 
