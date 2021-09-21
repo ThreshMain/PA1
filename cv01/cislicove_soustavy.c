@@ -3,6 +3,7 @@
 
 #define DEBUG 0
 #define number long int
+#define digit_max_limit 35
 
 struct Array dec_to_base(number, number);
 
@@ -25,31 +26,49 @@ struct Array {
 
 int main(int argv, char **args) {
     struct Array result;
-    printf("Base:");
-    number base;
-    scanf("%ld", &base);
+    number base = 0;
+    do {
+        printf("Base:");
+        scanf("%ld", &base);
+    } while (base >= digit_max_limit || base < 1);
 
-    printf("Number of digits:");
-    number number_of_digits;
-    scanf("%ld", &number_of_digits);
+    number number_of_digits = 0;
+    do {
+        printf("Number of digits:");
+        scanf("%ld", &number_of_digits);
+    } while (number_of_digits <= 0);
 
-    struct Array digits = {number_of_digits, (number *) malloc(sizeof(number) * (number_of_digits))};
+    printf("Enter the number:");
+    char *input = (char *) malloc(sizeof(char) * number_of_digits);
+    scanf("%s", input);
+
+    struct Array digits = {number_of_digits, malloc(sizeof(number) * number_of_digits)};
 
     for (number i = number_of_digits; i > 0; i--) {
-        number digit;
-        do {
-            printf("Enter the (%ld-th) digit:", i);
-            scanf("%ld", &digit);
-        } while (digit >= base);
-        digits.data[number_of_digits - i] = digit;
+        char digit = input[i - 1];
+        if(DEBUG){
+            printf("%c=%d\n",digit,digit);
+        }
+        while (digit < '0' || (digit > '9' && digit < 'A') || digit > 'Z') {
+            printf("Please correct the (%ld-th) digit from(%c):", i,digit);
+            scanf("%c", &digit);
+        }
+        digits.data[number_of_digits - i] = digit - ((digit >= 'A' && digit <= 'Z') ? 'A' - 10 : '0');
     }
+    printf("Your number is:");
+    print_digits(reverse_array(digits));
+    printf("\n");
     if (DEBUG) {
+        printf("\n");
         print_digits(digits);
         printf("\n");
     }
-    printf("output base:");
-    number outbase;
-    scanf("%ld", &outbase);
+
+    number outbase=0;
+    do {
+        printf("output base:");
+        scanf("%ld", &outbase);
+    } while (outbase >= digit_max_limit || outbase < 1);
 
     result = base_to_base(digits, base, outbase);
     print_digits(result);
@@ -61,7 +80,7 @@ int main(int argv, char **args) {
         printf("\n");
         print_digits(change(12345, 16));
     }
-    if(DEBUG){ // testing digit printing
+    if (DEBUG) { // testing digit printing
         struct Array test = {50, (number *) malloc(sizeof(number) * 50)};
         for (int i = 0; i < 50; i++) {
             test.data[i] = i;
@@ -76,18 +95,17 @@ int main(int argv, char **args) {
  * Prints digits using ASCII 0-9 then A-Z
  */
 void print_digits(struct Array digits) {
-    int limit = 35;
     number size = digits.size;
     for (number i = 0; i < size; i++) {
         number digit = digits.data[i];
-        if(digit>limit){
-            printf("\nError number should not be bigger then %d\n",limit);
+        if (digit > digit_max_limit) {
+            printf("\nError number should not be bigger then %d\n", digit_max_limit);
         }
         // if digit < 10 then add only 48 since 0-9 ASCII codes are 48-57
         // else add 64 A-Z
         printf("%c", digit + (digit > 9 ? 'A' - 10 : '0'));
-        if(DEBUG){
-            printf("=%d\n",digit);
+        if (DEBUG) {
+            printf("=%d\n", digit);
         }
     }
 }
