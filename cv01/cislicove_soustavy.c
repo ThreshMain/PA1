@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define DEBUG 0
 #define number long int
 #define digit_max_limit 35
+#define input_string_size 20
 
 struct Array dec_to_base(number, number);
 
@@ -32,17 +34,12 @@ int main(int argv, char **args) {
         scanf("%ld", &base);
     } while (base >= digit_max_limit || base < 1);
 
-    number number_of_digits = 0;
-    do {
-        printf("Number of digits:");
-        scanf("%ld", &number_of_digits);
-    } while (number_of_digits <= 0);
-
     printf("Enter the number:");
-    char *input = (char *) malloc(sizeof(char) * number_of_digits);
+    char *input = (char *) malloc(sizeof(char) * input_string_size);
     scanf("%s", input);
+    int number_of_digits = strlen(input);
 
-    struct Array digits = {number_of_digits, malloc(sizeof(number) * number_of_digits)};
+    struct Array digits = {number_of_digits, (number*) malloc(sizeof(number) * number_of_digits)};
 
     for (number i = number_of_digits; i > 0; i--) {
         char digit = input[i - 1];
@@ -103,9 +100,9 @@ void print_digits(struct Array digits) {
         }
         // if digit < 10 then add only 48 since 0-9 ASCII codes are 48-57
         // else add 64 A-Z
-        printf("%c", digit + (digit > 9 ? 'A' - 10 : '0'));
+        printf("%c",(char) digit + (digit > 9 ? 'A' - 10 : '0'));
         if (DEBUG) {
-            printf("=%d\n", digit);
+            printf("=%ld\n", digit);
         }
     }
 }
