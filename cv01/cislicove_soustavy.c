@@ -9,34 +9,32 @@ int main(int argv,char **args){
     int *result;
     int *digits;
     printf("Base:");
-    char *input = (char*) malloc(sizeof(char)*25);
-    scanf("%s",input);
-    int base = atoi(input);
+    int base;
+    scanf("%d",&base);
 
     printf("Number of digits:");
-    scanf("%s",input);
-    int number_of_digits = atoi(input);
+    int number_of_digits;
+    scanf("%d",&number_of_digits);
     digits = (int*) malloc(sizeof(int) * (number_of_digits+1));
-    *digits = number_of_digits;
+    digits[0] = number_of_digits;
     digits = (digits + 1);
 
     for(int i = number_of_digits;i>0;i--){
 	int digit = base;
 	while (digit >= base){
 	    printf("Enter the (%d-th) digit:",i);
-	    scanf("%s",input);
-            digit = atoi(input);
+	    scanf("%d",&digit);
 	}
-        *(digits + number_of_digits - i) = digit;	
+        digits[number_of_digits - i] = digit;	
     }
     printf("output base:");
-    scanf("%s",input);
-    int outbase = atoi(input);
+    int outbase;
+    scanf("%d",&outbase);
 
     result = base_to_base(digits,base,outbase);
-    int size = *(result-1);
+    int size = result[-1];
     for(int i = 0; i <= size; i++){
-       printf("%d%c",*(result+i),(i!=size && outbase!=10)*'-');
+       printf("%d%c",result[i],(i!=size && outbase!=10)*'-');
     }
 }
 /* 
@@ -44,11 +42,11 @@ int main(int argv,char **args){
  * but it's my way so psst :D
  */
 void change(int input,int base,int* output){
-    int power=pow_int(base,20);
+    int power = 20;
     while(power != 0){
-	*(output + power) = input / power;
-	input = input % power;;
-	power /= base;
+	output[power] = input / pow_int(base,power);
+	input %= (pow_int(base,power));
+	power --;
     }
 }
 /*
@@ -71,16 +69,16 @@ int* dec_to_base(int input,int base){
     int tmp = 0;
     while(input != 0){
        int zb = input % base;
-       *(save + tmp++) = zb;
+       save[tmp++] = zb;
        input = input / base;
     }
     tmp--;
     int *output = (int*) malloc(sizeof(int) * (tmp+1));
     for(int i = tmp; i >= 0; i--){
-	*(output+1+tmp-i) = *(save+i);
+	output[1+tmp-i] = save[i];
     }
     free(save);
-    *output = tmp;
+    output[0] = tmp;
     return (output+1);
 }
 /*
@@ -92,10 +90,10 @@ int* dec_to_base(int input,int base){
  */
 int* base_to_base(int *input,int sourcebase,int outbase){
     int tmp = 0;
-    int size = *(input-1);
+    int size = input[-1];
     int power = 1;
     for(int i = 1; i <= size; i++){
-	tmp += *(input+size-i) * power;
+	tmp += input[size-i] * power;
 	power *= sourcebase;
     }
     return dec_to_base(tmp,outbase);
