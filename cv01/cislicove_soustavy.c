@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define number long int
+typedef long int number;
 #define digit_max_limit 35
 #define input_string_size 20
 
