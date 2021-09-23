@@ -7,34 +7,34 @@ typedef long int number;
 #define digit_max_limit 35
 #define input_string_size 20
 
-struct Array dec_to_base(number dec_number, int base);
+typedef struct {
+    int size;
+    int *data;
+} Array;
 
-struct Array base_to_base(struct Array input, int source_base, int out_base);
+Array dec_to_base(number dec_number, int base);
 
-struct Array change(number dec_number, int base);
+Array base_to_base(Array input, int source_base, int out_base);
+
+Array change(number dec_number, int base);
 
 number pow_int(int base, int exponent);
 
 int number_of_digits_needed(number dec_number, int base);
 
-void print_digits(struct Array digits);
+void print_digits(Array digits);
 
-struct Array reverse_array(struct Array array);
+Array reverse_array(Array array);
 
-struct Array interactive();
+Array interactive();
 
-struct Array get_digits_from_string(char *char_digits, int base);
+Array get_digits_from_string(char *char_digits, int base);
 
 void testingMethods();
 
 bool test_base(int base) {
     return base < digit_max_limit && base > 1;
 }
-
-struct Array {
-    int size;
-    int *data;
-};
 
 bool DEBUG = false;
 const char *help_text = "Convert number [A] from base [X] to base [Y]\nUsage: baseToBase [options]... [A] [X] [Y]\n\t-d\tshow debug text\n"
@@ -75,7 +75,7 @@ int main(int argv, char **args) {
             int base = atoi(char_base);
             int out_base = atoi(char_out_base);
 
-            struct Array digits = get_digits_from_string(char_digits, base);
+            Array digits = get_digits_from_string(char_digits, base);
             printf("Your number is:");
             print_digits(reverse_array(digits));
             printf("\n");
@@ -95,14 +95,14 @@ int main(int argv, char **args) {
  * Transforms char array[char_digits] to array of numbers and checks if the number is valid in base[base]
  * if there is invalid digit int the array it will ask in the console for new digit until valid one is given
  *
- * returns struct Array with digits
+ * returns Array with digits
  */
-struct Array get_digits_from_string(char *char_digits, int base) {
+Array get_digits_from_string(char *char_digits, int base) {
     int number_of_digits = strlen(char_digits);
     if (DEBUG) {
         printf("number_of_digits(%d)\n", number_of_digits);
     }
-    struct Array digits = {number_of_digits, (int *) malloc(sizeof(int) * number_of_digits)};
+    Array digits = {number_of_digits, (int *) malloc(sizeof(int) * number_of_digits)};
     for (int i = number_of_digits; i > 0; i--) {
         char digit_char = char_digits[i - 1];
         int digit_number = digit_char - ((digit_char >= 'A' && digit_char <= 'Z') ? 'A' - 10 : '0');
@@ -128,8 +128,8 @@ struct Array get_digits_from_string(char *char_digits, int base) {
  *
  * returns Array with result from base_to_base conversion
  */
-struct Array interactive() {
-    struct Array result;
+Array interactive() {
+    Array result;
     int base = 0;
     do {
         printf("Base:");
@@ -140,7 +140,7 @@ struct Array interactive() {
     char *input = (char *) malloc(sizeof(char) * input_string_size);
     scanf("%s", input);
 
-    struct Array digits = get_digits_from_string(input, base);
+    Array digits = get_digits_from_string(input, base);
     printf("Your number is:");
     print_digits(reverse_array(digits));
     printf("\n");
@@ -164,7 +164,7 @@ struct Array interactive() {
  * Prints digits using ASCII 0-9 then A-Z
  * the maximum is defined as "digit_max_limit"
  */
-void print_digits(struct Array digits) {
+void print_digits(Array digits) {
     int size = digits.size;
     for (int i = 0; i < size; i++) {
         int digit = digits.data[i];
@@ -185,9 +185,9 @@ void print_digits(struct Array digits) {
  * Converting to base Y[base] from decimal number[dec_number]
  * using division by the biggest power of Y and going down to Y^0
  */
-struct Array change(number dec_number, int base) {
+Array change(number dec_number, int base) {
     int exponent = number_of_digits_needed(dec_number, base);
-    struct Array output = {exponent, (int *) malloc(sizeof(int) * exponent)};
+    Array output = {exponent, (int *) malloc(sizeof(int) * exponent)};
     number power = pow_int(base, exponent);
     while (exponent >= 0) {
         output.data[exponent] = (int) (dec_number / power);
@@ -215,7 +215,7 @@ number pow_int(int base, int exponent) {
  *
  * returns reversed array
  */
-struct Array reverse_array(struct Array array) {
+Array reverse_array(Array array) {
     int tmp;
     int size = array.size;
     for (int i = 0; i < size / 2; i++) {
@@ -239,12 +239,12 @@ int number_of_digits_needed(number dec_number, int base) {
  * Converts base-10 number to base X
  * using division by base and saving the remained
  *
- * returns struct Array with the digits of the result
+ * returns Array with the digits of the result
  */
-struct Array dec_to_base(number dec_number, int base) {
+Array dec_to_base(number dec_number, int base) {
     // Get the number of digits that we are going to need and allocate array
     int needed_digits = number_of_digits_needed(dec_number, base);
-    struct Array output = {needed_digits, (int *) malloc(sizeof(int) * needed_digits)};
+    Array output = {needed_digits, (int *) malloc(sizeof(int) * needed_digits)};
 
     // reversed base X number using
     number tmp = 0;
@@ -266,9 +266,9 @@ struct Array dec_to_base(number dec_number, int base) {
  * 
  * this method is using dec_to_base
  *
- * returns struct Array with the digits of the result
+ * returns Array with the digits of the result
  */
-struct Array base_to_base(struct Array input, int source_base, int out_base) {
+Array base_to_base(Array input, int source_base, int out_base) {
     number base_ten = 0;
     int size = input.size;
     number power = 1;
@@ -301,7 +301,7 @@ void testingMethods() {
                 12345, 16));
     }
     if (DEBUG) { // testing digit printing
-        struct Array test = {50, (int *) malloc(sizeof(int) * 50)};
+        Array test = {50, (int *) malloc(sizeof(int) * 50)};
         for (
                 int i = 0;
                 i < 50; i++) {
