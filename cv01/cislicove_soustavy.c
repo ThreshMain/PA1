@@ -40,14 +40,14 @@ bool DEBUG = false;
 const char *help_text = "Convert number [A] from base [X] to base [Y]\nUsage: baseToBase [options]... [A] [X] [Y]\n\t-d\tshow debug text\n"
                         "If A,X,Y is not supplied then program will ask for them while running\n";
 
-int main(int argv, char **args) {
-    struct Array result;
-    if (argv >= 2) {
-        if (argv == 2) {
-            if (strcmp(args[1], "-d") == 0) {
+int main(int argc, char **argv) {
+    Array result;
+    if (argc >= 2) {
+        if (argc == 2) {
+            if (strcmp(argv[1], "-d") == 0) {
                 DEBUG = true;
                 result = interactive();
-            } else if (strcmp(args[1], "-h") == 0) {
+            } else if (strcmp(argv[1], "-h") == 0) {
                 printf("%s", help_text);
                 return EXIT_SUCCESS;
             } else {
@@ -58,17 +58,17 @@ int main(int argv, char **args) {
             char *char_base;
             char *char_digits;
             char *char_out_base;
-            if (argv == 4) {
-                char_base = args[1];
-                char_digits = args[2];
-                char_out_base = args[3];
-            } else if (argv == 5) {
-                if (strcmp(args[1], "-d") == 0) {
+            if (argc == 4) {
+                char_base = argv[1];
+                char_digits = argv[2];
+                char_out_base = argv[3];
+            } else if (argc == 5) {
+                if (strcmp(argv[1], "-d") == 0) {
                     DEBUG = true;
                 }
-                char_base = args[2];
-                char_digits = args[3];
-                char_out_base = args[4];
+                char_base = argv[2];
+                char_digits = argv[3];
+                char_out_base = argv[4];
             } else {
                 return EXIT_FAILURE;
             }
