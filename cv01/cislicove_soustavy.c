@@ -30,7 +30,7 @@ array_t interactive();
 
 array_t get_digits_from_string(char *char_digits, int base);
 
-void testingMethods();
+void testing_methods();
 
 bool test_base(int base) {
     return base < DIGIT_MAX_SIZE && base > 1;
@@ -273,7 +273,7 @@ array_t base_to_base(array_t input, int source_base, int out_base) {
     return dec_to_base(base_ten, out_base);
 }
 
-void testingMethods() {
+void testing_methods() {
     if (DEBUG) { // testing change function only in debug mode
         printf("\n");
 
