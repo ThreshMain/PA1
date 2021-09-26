@@ -22,7 +22,7 @@ number_t pow_int(int base, int exponent);
 
 int number_of_digits_needed(number_t dec_number, int base);
 
-void print_digits(array_t digits);
+char* digits_to_char(array_t digits);
 
 array_t reverse_array(array_t array);
 
@@ -76,18 +76,14 @@ int main(int argc, char **argv) {
             int out_base = atoi(char_out_base);
 
             array_t digits = get_digits_from_string(char_digits, base);
-            printf("Your number_t is:");
-            print_digits(reverse_array(digits));
-            printf("\n");
+            printf("Your number_t is: %s\n", digits_to_char(reverse_array(digits)));
 
             result = base_to_base(digits, base, out_base);
         }
     } else {
         result = interactive();
     }
-    printf("Result is:");
-    print_digits(result);
-    printf("\n");
+    printf("Result is: %s\n", digits_to_char(result));
     return EXIT_SUCCESS;
 }
 
@@ -141,14 +137,7 @@ array_t interactive() {
     scanf("%s", input);
 
     array_t digits = get_digits_from_string(input, base);
-    printf("Your number_t is:");
-    print_digits(reverse_array(digits));
-    printf("\n");
-    if (DEBUG) {
-        printf("\n");
-        print_digits(digits);
-        printf("\n");
-    }
+    printf("Your number_t is: %s\n",digits_to_char(reverse_array(digits)));
 
     int out_base = 0;
     do {
@@ -161,11 +150,12 @@ array_t interactive() {
 }
 
 /*
- * Prints digits using ASCII 0-9 then A-Z
+ * Converts int array to char string using ASCII 0-9 then A-Z
  * the maximum is defined as "digit_max_limit"
  */
-void print_digits(array_t digits) {
+char* digits_to_char(array_t digits) {
     int size = digits.size;
+    char *result = (char *) malloc(sizeof(char) * size);
     for (int i = 0; i < size; i++) {
         int digit = digits.data[i];
         if (digit > digit_max_limit) {
@@ -173,11 +163,12 @@ void print_digits(array_t digits) {
         }
         // if digit < 10 then add only 48 since 0-9 ASCII codes are 48-57
         // else add 64 A-Z
-        printf("%c", (char) digit + (digit > 9 ? 'A' - 10 : '0'));
+        result[i] = (char) (digit + (digit > 9 ? 'A' - 10 : '0'));
         if (DEBUG) {
             printf("=print_digits.int_digit(%d)\n", digit);
         }
     }
+    return result;
 }
 
 
@@ -286,13 +277,13 @@ void testingMethods() {
     if (DEBUG) { // testing change function only in debug mode
         printf("\n");
 
-        print_digits(change(12345, 2));
+        printf("%s\n", digits_to_char(change(12345, 2)));
         printf("\n");
 
-        print_digits(change(1, 2));
+        printf("%s\n", digits_to_char(change(1, 2)));
         printf("\n");
 
-        print_digits(change(12345, 16));
+        printf("%s\n", digits_to_char(change(12345, 16)));
         printf("\n");
     }
     if (DEBUG) { // testing digit printing
@@ -300,6 +291,6 @@ void testingMethods() {
         for (int i = 0; i < 50; i++) {
             test.data[i] = i;
         }
-        print_digits(test);
+        printf("%s\n", digits_to_char(test));
     }
 }
