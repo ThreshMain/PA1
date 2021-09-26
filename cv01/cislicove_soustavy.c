@@ -4,8 +4,8 @@
 #include <stdbool.h>
 
 typedef long int number_t;
-#define digit_max_limit 35
-#define input_string_size 20
+#define DIGIT_MAX_SIZE 35
+#define INPUT_MAX_SIZE 100
 
 typedef struct {
     int size;
@@ -33,7 +33,7 @@ array_t get_digits_from_string(char *char_digits, int base);
 void testingMethods();
 
 bool test_base(int base) {
-    return base < digit_max_limit && base > 1;
+    return base < DIGIT_MAX_SIZE && base > 1;
 }
 
 bool DEBUG = false;
@@ -133,7 +133,7 @@ array_t interactive() {
     } while (!test_base(base));
 
     printf("Enter the number_t:");
-    char *input = (char *) malloc(sizeof(char) * input_string_size);
+    char *input = (char *) malloc(sizeof(char) * INPUT_MAX_SIZE);
     scanf("%s", input);
 
     array_t digits = get_digits_from_string(input, base);
@@ -151,15 +151,15 @@ array_t interactive() {
 
 /*
  * Converts int array to char string using ASCII 0-9 then A-Z
- * the maximum is defined as "digit_max_limit"
+ * the maximum is defined as "DIGIT_MAX_SIZE"
  */
 char* digits_to_char(array_t digits) {
     int size = digits.size;
     char *result = (char *) malloc(sizeof(char) * size);
     for (int i = 0; i < size; i++) {
         int digit = digits.data[i];
-        if (digit > digit_max_limit) {
-            printf("\nError number_t should not be bigger then %d\n", digit_max_limit);
+        if (digit > DIGIT_MAX_SIZE) {
+            printf("\nError number_t should not be bigger then %d\n", DIGIT_MAX_SIZE);
         }
         // if digit < 10 then add only 48 since 0-9 ASCII codes are 48-57
         // else add 64 A-Z
