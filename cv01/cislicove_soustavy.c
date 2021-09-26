@@ -76,14 +76,21 @@ int main(int argc, char **argv) {
             int out_base = atoi(char_out_base);
 
             array_t digits = get_digits_from_string(char_digits, base);
-            printf("Your number_t is: %s\n", digits_to_char(reverse_array(digits)));
+
+            char *your_number_string = digits_to_char(digits);
+            printf("Your number_t is: %s\n", your_number_string);
+            free(your_number_string);
 
             result = base_to_base(digits, base, out_base);
+            free(digits.data);
         }
     } else {
         result = interactive();
     }
-    printf("Result is: %s\n", digits_to_char(result));
+    char *result_string = digits_to_char(result);
+    printf("Result is: %s\n", result_string);
+    free(result_string);
+    free(result.data);
     return EXIT_SUCCESS;
 }
 
