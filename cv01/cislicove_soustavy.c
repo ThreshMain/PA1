@@ -22,7 +22,7 @@ number_t pow_int(int base, int exponent);
 
 int number_of_digits_needed(number_t dec_number, int base);
 
-char* digits_to_char(array_t digits);
+char *digits_to_char(array_t digits);
 
 array_t reverse_array(array_t array);
 
@@ -32,62 +32,68 @@ array_t get_digits_from_string(char *char_digits, int base);
 
 void testing_methods();
 
+int digit_to_int(char digit_char);
+
 bool test_base(int base) {
     return base < DIGIT_MAX_SIZE && base > 1;
 }
 
 bool DEBUG = false;
-const char *help_text = "Convert number_t [A] from base [X] to base [Y]\nUsage: baseToBase [options]... [A] [X] [Y]\n\t-d\tshow debug text\n"
+const char *help_text = "Convert number_t [A] from base [X] to base [Y]\nUsage: baseToBase [options]... [A]... [X] [Y]\n\t-d\tshow debug text\n"
                         "If A,X,Y is not supplied then program will ask for them while running\n";
 
 int main(int argc, char **argv) {
     array_t result;
-    if (argc >= 2) {
-        if (argc == 2) {
-            if (strcmp(argv[1], "-d") == 0) {
-                DEBUG = true;
-                result = interactive();
-            } else if (strcmp(argv[1], "-h") == 0) {
-                printf("%s", help_text);
-                return EXIT_SUCCESS;
-            } else {
-                return EXIT_FAILURE;
-            }
 
+    char *numbers[3];
+    int number_index = 0;
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[1], "-d") == 0) {
+            DEBUG = true;
+        } else if (strcmp(argv[1], "-h") == 0) {
+            printf("%s", help_text);
+            return EXIT_SUCCESS;
         } else {
-            char *char_base;
-            char *char_digits;
-            char *char_out_base;
-            if (argc == 4) {
-                char_base = argv[1];
-                char_digits = argv[2];
-                char_out_base = argv[3];
-            } else if (argc == 5) {
-                if (strcmp(argv[1], "-d") == 0) {
-                    DEBUG = true;
-                }
-                char_base = argv[2];
-                char_digits = argv[3];
-                char_out_base = argv[4];
-            } else {
+            if (number_index == 3) {
+                printf("%s", help_text);
                 return EXIT_FAILURE;
             }
-            int base = atoi(char_base);
-            int out_base = atoi(char_out_base);
-
-            array_t digits = get_digits_from_string(char_digits, base);
-
-            char *your_number_string = digits_to_char(digits);
-            printf("Your number_t is: %s\n", your_number_string);
-            free(your_number_string);
-
-            result = base_to_base(digits, base, out_base);
-            free(digits.data);
+            numbers[number_index++] = argv[i];
         }
-    } else {
+    }
+    if (number_index == 0) {
         result = interactive();
+    } else if (number_index == 3 || number_index == 2) {
+        if (number_index == 2) {
+            numbers[2] = numbers[1];
+            numbers[1] = numbers[0];
+            numbers[0] = "10";
+        }
+        int base = atoi(numbers[0]);
+        int out_base = atoi(numbers[2]);
+
+        array_t digits = get_digits_from_string(numbers[1], base);
+
+        char *your_number_string = digits_to_char(digits);
+        if (your_number_string == NULL) {
+            printf("%s", help_text);
+            return EXIT_FAILURE;
+        }
+        printf("Your number_t is: %s\n", your_number_string);
+        free(your_number_string);
+
+        result = base_to_base(digits, base, out_base);
+        free(digits.data);
+    } else {
+        printf("%s", help_text);
+        return EXIT_FAILURE;
     }
     char *result_string = digits_to_char(result);
+    if (result_string == NULL) {
+        printf("%s", help_text);
+        return EXIT_FAILURE;
+    }
     printf("Result is: %s\n", result_string);
     free(result_string);
     free(result.data);
@@ -108,18 +114,22 @@ array_t get_digits_from_string(char *char_digits, int base) {
     array_t digits = {number_of_digits, (int *) malloc(sizeof(int) * number_of_digits)};
     for (int i = number_of_digits; i > 0; i--) {
         char digit_char = char_digits[i - 1];
-        int digit_number = digit_char - ((digit_char >= 'A' && digit_char <= 'Z') ? 'A' - 10 : '0');
         if (DEBUG) {
             printf("get_digits_from_string.digit_char(%c)=get_digits_from_string.digit_int(%d)\n", digit_char,
                    digit_char);
         }
-        while (digit_char < '0' || (digit_char > '9' && digit_char < 'A') || digit_char > 'Z' || digit_number >= base) {
+        while (digit_to_int(digit_char) >= base) {
             printf("Please correct the (%d-th) digit_char from(%c):", i, digit_char);
-            scanf("%c", &digit_char);
+            scanf(" %c", &digit_char);
         }
+        int digit_number = digit_to_int(digit_char);
         digits.data[number_of_digits - i] = digit_number;
     }
     return digits;
+}
+
+int digit_to_int(char digit_char){
+    return digit_char - ((digit_char >= 'A' && digit_char <= 'Z') ? 'A' - 10 : '0');
 }
 
 /*
@@ -144,7 +154,7 @@ array_t interactive() {
     scanf("%s", input);
 
     array_t digits = get_digits_from_string(input, base);
-    printf("Your number_t is: %s\n",digits_to_char(reverse_array(digits)));
+    printf("Your number_t is: %s\n", digits_to_char(reverse_array(digits)));
 
     int out_base = 0;
     do {
@@ -160,13 +170,15 @@ array_t interactive() {
  * Converts int array to char string using ASCII 0-9 then A-Z
  * the maximum is defined as "DIGIT_MAX_SIZE"
  */
-char* digits_to_char(array_t digits) {
+char *digits_to_char(array_t digits) {
     int size = digits.size;
-    char *result = (char *) malloc(sizeof(char) * size);
+    char *result = (char *) malloc(sizeof(char) * (size + 1));
     for (int i = 0; i < size; i++) {
         int digit = digits.data[i];
         if (digit > DIGIT_MAX_SIZE) {
             printf("\nError number_t should not be bigger then %d\n", DIGIT_MAX_SIZE);
+            free(result);
+            return NULL;
         }
         // if digit < 10 then add only 48 since 0-9 ASCII codes are 48-57
         // else add 64 A-Z
@@ -175,6 +187,7 @@ char* digits_to_char(array_t digits) {
             printf("=print_digits.int_digit(%d)\n", digit);
         }
     }
+    result[size] = 0;
     return result;
 }
 
