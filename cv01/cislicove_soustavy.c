@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
         array_t digits = get_digits_from_string(numbers[1], base);
 
-        char *your_number_string = digits_to_char(digits);
+        char *your_number_string = digits_to_char(reverse_array(digits));
         if (your_number_string == NULL) {
             printf("%s", help_text);
             return EXIT_FAILURE;
