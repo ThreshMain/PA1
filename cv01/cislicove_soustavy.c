@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "DanglingPointer"
 typedef long int number_t;
 #define DIGIT_MAX_SIZE 35
 #define INPUT_MAX_SIZE 100
@@ -33,6 +35,12 @@ array_t get_digits_from_string(char *char_digits, int base);
 void testing_methods();
 
 int digit_to_int(char digit_char);
+
+int *split_to_prime_factors(int number);
+
+array_t prime_factors_to_array(int *factors, int size);
+
+int chunk_split_size(int base_a, int base_b);
 
 bool test_base(int base) {
     return base < DIGIT_MAX_SIZE && base > 1;
@@ -129,7 +137,7 @@ array_t get_digits_from_string(char *char_digits, int base) {
     return digits;
 }
 
-int digit_to_int(char digit_char){
+int digit_to_int(char digit_char) {
     return digit_char - ((digit_char >= 'A' && digit_char <= 'Z') ? 'A' - 10 : '0');
 }
 
@@ -155,7 +163,10 @@ array_t interactive() {
     scanf("%s", input);
 
     array_t digits = get_digits_from_string(input, base);
-    printf("Your number_t is: %s\n", digits_to_char(reverse_array(digits)));
+
+    char *result_string = digits_to_char(digits);
+    printf("Your number_t is: %s\n", result_string);
+    free(result_string);
 
     int out_base = 0;
     do {
@@ -164,6 +175,8 @@ array_t interactive() {
     } while (!test_base(out_base));
 
     result = base_to_base(digits, base, out_base);
+    free(input);
+    free(digits.data);
     return result;
 }
 
@@ -281,8 +294,34 @@ array_t dec_to_base(number_t dec_number, int base) {
  * returns array_t with the digits of the result
  */
 array_t base_to_base(array_t input, int source_base, int out_base) {
-    number_t base_ten = 0;
     int size = input.size;
+    int chunk_size = chunk_split_size(source_base, out_base);
+    if (chunk_size > 0) {
+        array_t result = {size * chunk_size, malloc(sizeof(int) * size * chunk_size)};
+        int index = 0;
+        for (int i = 0; i < size; i++) {
+            int digit = input.data[size - 1 - i];
+            array_t out_base_chunk = reverse_array(dec_to_base(digit, out_base));
+            if (DEBUG) {
+                printf("%d=%s,%d\n", digit, digits_to_char(out_base_chunk), out_base_chunk.size);
+            }
+            for (int j = 0; j < chunk_size; j++) {
+                if (j < out_base_chunk.size) {
+                    result.data[result.size - 1 - index++] = out_base_chunk.data[j];
+                } else {
+                    result.data[result.size - 1 - index++] = 0;
+                }
+                if (DEBUG) {
+                    printf("%s   %d  %d   %d \n", digits_to_char(result), j, j < out_base_chunk.size,
+                           out_base_chunk.data[j]);
+                }
+            }
+            free(out_base_chunk.data);
+        }
+        return result;
+    }
+
+    number_t base_ten = 0;
     number_t power = 1;
     for (int i = 0; i < size; i++) {
         base_ten += input.data[size - 1 - i] * power;
@@ -292,6 +331,93 @@ array_t base_to_base(array_t input, int source_base, int out_base) {
         printf("base_to_base.base_ten(%ld)\n", base_ten);
     }
     return dec_to_base(base_ten, out_base);
+}
+
+/*
+ * Calculates the highest chunk split size that can be used to divide higher number into smaller parts
+ * in order to change their base from base_a to base_b
+ *
+ * returns chunk size or -1 if there is no split possible
+ */
+int chunk_split_size(int base_a, int base_b) {
+    int *primes_a = split_to_prime_factors(base_a);
+    int prime_a = -1;
+    int power_a = 0;
+    for (int i = 0; i < base_a - 1; i++) {
+        if (primes_a[i]) {
+            if (prime_a == -1) {
+                prime_a = i + 2;
+                power_a = primes_a[i];
+            } else {
+                free(primes_a);
+                return -1;
+            }
+        }
+    }
+
+    int *primes_b = split_to_prime_factors(base_b);
+    int prime_b = -1;
+    int power_b = 0;
+    for (int i = 0; i < base_b - 1; i++) {
+        if (primes_b[i]) {
+            if (prime_b == -1 && i+2 == prime_a) {
+                prime_b = i + 2;
+                power_b = primes_b[i];
+            } else {
+                free(primes_a);
+                free(primes_b);
+                return -1;
+            }
+        }
+    }
+    free(primes_a);
+    free(primes_b);
+    if (power_a > power_b && power_a % power_b == 0) {
+        return power_a / power_b;
+    }
+    return -1;
+}
+
+/*
+ * Split number into prime factors which when multiplied should give back the same number
+ *
+ * returns array of ints where index is the **prime number - 2** nad value power
+ *          size of this array is source number - 1
+ */
+
+int *split_to_prime_factors(int number) {
+    unsigned long size = sizeof(int) * (number - 1);
+    int *primes = malloc(size);
+    memset(primes, 0, size);
+    int number_of_primes = 0;
+    while (number > 1) {
+        for (int i = 2; i <= number; i++) {
+            if (number % i == 0) {
+                primes[i - 2]++;
+                number_of_primes++;
+                number /= i;
+                break;
+            }
+        }
+    }
+    return primes;
+}
+
+/*
+ * Converts array where index is the number nad value is number of times that the number
+ * should be inside
+ *
+ * returns array_t with all numbers in order
+ */
+array_t prime_factors_to_array(int *factors, int size) {
+    array_t result = {size, malloc(sizeof(int) * size)};
+    int index = 0;
+    for (int i = 0; i < size; i++) {
+        for (; factors[i]; factors[i]--) {
+            result.data[index++] = i + 2;
+        }
+    }
+    return result;
 }
 
 void testing_methods() {
@@ -315,3 +441,5 @@ void testing_methods() {
         printf("%s\n", digits_to_char(test));
     }
 }
+
+#pragma clang diagnostic pop
