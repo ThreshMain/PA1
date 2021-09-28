@@ -108,11 +108,13 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
 }
 
-/*
- * Transforms char array[char_digits] to array of numbers and checks if the number_t is valid in base[base]
+/**
+ * Transforms char array[char_digits] to array_t of numbers and checks if the number is valid in #base
  * if there is invalid digit int the array it will ask in the console for new digit until valid one is given
  *
- * returns array_t with digits
+ * @param char_digits '\0' ended string
+ * @param base number smaller then DIGIT_MAX_SIZE and bigger then 0
+ * @return array_t with digits
  */
 array_t get_digits_from_string(char *char_digits, int base) {
     int number_of_digits = strlen(char_digits);
@@ -127,7 +129,7 @@ array_t get_digits_from_string(char *char_digits, int base) {
                    digit_char);
         }
         int digit_number = digit_to_int(digit_char);
-        while (digit_number >= base || digit_number<0) {
+        while (digit_number >= base || digit_number < 0) {
             printf("Please correct the (%d-th) digit_char from(%c):", i, digit_char);
             scanf(" %c", &digit_char);
             digit_number = digit_to_int(digit_char);
@@ -141,14 +143,11 @@ int digit_to_int(char digit_char) {
     return digit_char - ((digit_char >= 'A' && digit_char <= 'Z') ? 'A' - 10 : '0');
 }
 
-/*
+/**
  * 1) Ask for inputs using console and check if those inputs are valid if not ask again until user
- *    is polite enough to give us valid input
- * 2) use the method base_to_base:
- *      Converts any base-X number_t to base-Y
- *      using division by base and saving the remained
- *
- * returns array_t with result from base_to_base conversion
+ *    is polite enough to give valid input
+ * 2) use the method base_to_base on the input
+ * @return array_t with result from base_to_base conversion
  */
 array_t interactive() {
     array_t result;
@@ -180,9 +179,12 @@ array_t interactive() {
     return result;
 }
 
-/*
+/**
  * Converts int array to char string using ASCII 0-9 then A-Z
  * the maximum is defined as "DIGIT_MAX_SIZE"
+ *
+ * @param digits
+ * @return string ended with '\0'
  */
 char *digits_to_char(array_t digits) {
     int size = digits.size;
@@ -205,10 +207,13 @@ char *digits_to_char(array_t digits) {
     return result;
 }
 
-
-/*
+/**
  * Converting to base Y[base] from decimal number_t[dec_number]
  * using division by the biggest power of Y and going down to Y^0
+ *
+ * @param dec_number
+ * @param base
+ * @return array_t with result digits
  */
 array_t change(number_t dec_number, int base) {
     int exponent = number_of_digits_needed(dec_number, base);
@@ -223,8 +228,11 @@ array_t change(number_t dec_number, int base) {
     return reverse_array(output);
 }
 
-/*
- * returns power of the base to the exponent
+
+/**
+ * @param base
+ * @param exponent
+ * @return power of the base to the exponent
  */
 number_t pow_int(int base, int exponent) {
     number_t tmp = 1;
@@ -234,11 +242,11 @@ number_t pow_int(int base, int exponent) {
     return tmp;
 }
 
-/*
+/**
  * reversing array[array] in place
  * !!changes the ORIGINAL array!!
- *
- * returns reversed array
+ * @param array
+ * @return reversed array_t
  */
 array_t reverse_array(array_t array) {
     int tmp;
@@ -251,8 +259,12 @@ array_t reverse_array(array_t array) {
     return array;
 }
 
-/*
- * returns number_t of digits needed to store base 10 number_t [dec_number] in base [base]
+/**
+ * Calculates number of digits need to store base 10 number_t [dec_number] in base [base]
+ *
+ * @param dec_number
+ * @param base
+ * @return number of digits needed
  */
 int number_of_digits_needed(number_t dec_number, int base) {
     int needed_digits = 1;
@@ -260,11 +272,13 @@ int number_of_digits_needed(number_t dec_number, int base) {
     return needed_digits - 1;
 }
 
-/*
- * Converts base-10 number_t to base X
+/**
+ * Converts base-10 dec_number to base X[base]
  * using division by base and saving the remained
  *
- * returns array_t with the digits of the result
+ * @param dec_number
+ * @param base
+ * @return array_t with the digits of the result
  */
 array_t dec_to_base(number_t dec_number, int base) {
     // Get the number_t of digits that we are going to need and allocate array
@@ -285,13 +299,13 @@ array_t dec_to_base(number_t dec_number, int base) {
     return reverse_array(output);
 }
 
-/*
- * Converts any base-X number_t to base-Y
+/**
+ * Converts any source_base input to out_base
  * using division by base and saving the remained
- *
- * this method is using dec_to_base
- *
- * returns array_t with the digits of the result
+ * @param input
+ * @param source_base
+ * @param out_base
+ * @return array_t with the digits of the result
  */
 array_t base_to_base(array_t input, int source_base, int out_base) {
     int size = input.size;
@@ -333,11 +347,13 @@ array_t base_to_base(array_t input, int source_base, int out_base) {
     return dec_to_base(base_ten, out_base);
 }
 
-/*
+/**
  * Calculates the highest chunk split size that can be used to divide higher number into smaller parts
  * in order to change their base from base_a to base_b
  *
- * returns chunk size or -1 if there is no split possible
+ * @param base_a bigger number
+ * @param base_b smaller number
+ * @returns chunk size or -1 if there is no split possible
  */
 int chunk_split_size(int base_a, int base_b) {
     int *primes_a = split_to_prime_factors(base_a);
@@ -360,7 +376,7 @@ int chunk_split_size(int base_a, int base_b) {
     int power_b = 0;
     for (int i = 0; i < base_b - 1; i++) {
         if (primes_b[i]) {
-            if (prime_b == -1 && i+2 == prime_a) {
+            if (prime_b == -1 && i + 2 == prime_a) {
                 prime_b = i + 2;
                 power_b = primes_b[i];
             } else {
@@ -378,13 +394,13 @@ int chunk_split_size(int base_a, int base_b) {
     return -1;
 }
 
-/*
+/**
  * Split number into prime factors which when multiplied should give back the same number
  *
- * returns array of ints where index is the **prime number - 2** nad value power
- *          size of this array is source number - 1
+ * @param number number bigger then 0 that should be prime factorized
+ * @return returns array of primes where index is the **prime number - 2** and value is the power,
+ * size of this array is source **number - 1**
  */
-
 int *split_to_prime_factors(int number) {
     unsigned long size = sizeof(int) * (number - 1);
     int *primes = malloc(size);
@@ -403,11 +419,13 @@ int *split_to_prime_factors(int number) {
     return primes;
 }
 
-/*
+/**
  * Converts array where index is the number nad value is number of times that the number
  * should be inside
  *
- * returns array_t with all numbers in order
+ * @param factors int array with size of size
+ * @param size  size of factors array
+ * @return array_t ready to be used by method digits_to_chars
  */
 array_t prime_factors_to_array(int *factors, int size) {
     array_t result = {size, malloc(sizeof(int) * size)};
