@@ -118,11 +118,12 @@ array_t get_digits_from_string(char *char_digits, int base) {
             printf("get_digits_from_string.digit_char(%c)=get_digits_from_string.digit_int(%d)\n", digit_char,
                    digit_char);
         }
-        while (digit_to_int(digit_char) >= base) {
+        int digit_number = digit_to_int(digit_char);
+        while (digit_number >= base || digit_number<0) {
             printf("Please correct the (%d-th) digit_char from(%c):", i, digit_char);
             scanf(" %c", &digit_char);
+            digit_number = digit_to_int(digit_char);
         }
-        int digit_number = digit_to_int(digit_char);
         digits.data[number_of_digits - i] = digit_number;
     }
     return digits;
