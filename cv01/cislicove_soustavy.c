@@ -164,7 +164,7 @@ array_t interactive() {
 
     array_t digits = get_digits_from_string(input, base);
 
-    char *result_string = digits_to_char(digits);
+    char *result_string = digits_to_char(reverse_array(digits));
     printf("Your number_t is: %s\n", result_string);
     free(result_string);
 
