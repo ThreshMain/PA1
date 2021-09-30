@@ -430,7 +430,13 @@ int *split_to_prime_factors(int number) {
  * @return array_t ready to be used by method digits_to_chars
  */
 array_t prime_factors_to_array(int *factors, int size) {
-    array_t result = {size, malloc(sizeof(int) * size)};
+    int number_of_primes = 0;
+    for(int i=0;i<size;i++){
+        if(factors[i]!=0){
+            number_of_primes+=factors[i];
+        }
+    }
+    array_t result = {number_of_primes, malloc(sizeof(int) * number_of_primes)};
     int index = 0;
     for (int i = 0; i < size; i++) {
         for (; factors[i]; factors[i]--) {
