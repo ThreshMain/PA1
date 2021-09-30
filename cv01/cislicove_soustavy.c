@@ -407,15 +407,13 @@ int *split_to_prime_factors(int number) {
     unsigned long size = sizeof(int) * (number - 1);
     int *primes = malloc(size);
     memset(primes, 0, size);
-    int number_of_primes = 0;
-    while (number > 1) {
-        for (int i = 2; i <= number; i++) {
-            if (number % i == 0) {
-                primes[i - 2]++;
-                number_of_primes++;
-                number /= i;
-                break;
-            }
+    int i = 2;
+    while (i <= number) {
+        if (number % i == 0) {
+            primes[i - 2]++;
+            number /= i;
+        } else {
+            i++;
         }
     }
     return primes;
