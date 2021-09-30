@@ -218,6 +218,7 @@ char *digits_to_char(array_t digits) {
 array_t change(number_t dec_number, int base) {
     int exponent = number_of_digits_needed(dec_number, base);
     array_t output = {exponent, (int *) malloc(sizeof(int) * exponent)};
+    exponent--;
     number_t power = pow_int(base, exponent);
     while (exponent >= 0) {
         output.data[exponent] = (int) (dec_number / power);
