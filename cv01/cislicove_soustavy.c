@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "DanglingPointer"
@@ -440,25 +441,32 @@ array_t prime_factors_to_array(int *factors, int size) {
 }
 
 void testing_methods() {
-    if (DEBUG) { // testing change function only in debug mode
-        printf("\n");
+    array_t digits;
+    char *string_result;
 
-        printf("%s\n", digits_to_char(change(12345, 2)));
-        printf("\n");
+    digits = change(12345, 2);
+    string_result = digits_to_char(digits);
+    assert(strcmp("11000000111001", string_result) == 0);
+    free(digits.data);
+    free(string_result);
 
-        printf("%s\n", digits_to_char(change(1, 2)));
-        printf("\n");
+    digits = change(12345, 4);
+    string_result = digits_to_char(digits);
+    assert(strcmp("3000321",string_result)==0);
+    free(digits.data);
+    free(string_result);
 
-        printf("%s\n", digits_to_char(change(12345, 16)));
-        printf("\n");
-    }
-    if (DEBUG) { // testing digit printing
-        array_t test = {50, (int *) malloc(sizeof(int) * 50)};
-        for (int i = 0; i < 50; i++) {
-            test.data[i] = i;
-        }
-        printf("%s\n", digits_to_char(test));
-    }
+    digits = change(12345, 8);
+    string_result = digits_to_char(digits);
+    assert(strcmp("30071",string_result)==0);
+    free(digits.data);
+    free(string_result);
+
+    digits = change(45, 2);
+    string_result = digits_to_char(digits);
+    assert(strcmp("101101",string_result)==0);
+    free(digits.data);
+    free(string_result);
 }
 
 #pragma clang diagnostic pop
