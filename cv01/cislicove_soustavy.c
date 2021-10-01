@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "DanglingPointer"
 typedef long int number_t;
 #define DIGIT_MAX_SIZE 35
 #define INPUT_MAX_SIZE 100
@@ -472,5 +470,3 @@ void testing_methods() {
     free(digits.data);
     free(string_result);
 }
-
-#pragma clang diagnostic pop
