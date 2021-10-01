@@ -46,8 +46,14 @@ bool test_base(int base) {
 }
 
 bool DEBUG = false;
-const char *help_text = "Convert number_t [A] from base [X] to base [Y]\nUsage: baseToBase [options]... [A]... [X] [Y]\n\t-d\tshow debug text\n"
-                        "If A,X,Y is not supplied then program will ask for them while running\n";
+char VERBOSE_LEVEL = 0;
+
+const char *help_text = "Convert number_t [A] from base [X] to base [Y]\nUsage: baseToBase [options]... [A]... [X] [Y]\n"
+                        "\t-d\tshow debug text\n"
+                        "\t-v\tbe more verbose\n"
+                        "\t-h\tprint this help menu\n"
+                        "When A,X,Y is not supplied then program will ask for them while running\n"
+                        "If only X and Y are supplied it will set A to 10\n";
 
 int main(int argc, char **argv) {
     array_t result;
@@ -56,11 +62,13 @@ int main(int argc, char **argv) {
     int number_index = 0;
 
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[1], "-d") == 0) {
+        if (strcmp(argv[i], "-d") == 0) {
             DEBUG = true;
-        } else if (strcmp(argv[1], "-h") == 0) {
+        } else if (strcmp(argv[i], "-h") == 0) {
             printf("%s", help_text);
             return EXIT_SUCCESS;
+        } else if (strcmp(argv[i], "-v") == 0) {
+            VERBOSE_LEVEL++;
         } else {
             if (number_index == 3) {
                 printf("%s", help_text);
@@ -82,13 +90,15 @@ int main(int argc, char **argv) {
 
         array_t digits = get_digits_from_string(numbers[1], base);
 
-        char *your_number_string = digits_to_char(reverse_array(digits));
-        if (your_number_string == NULL) {
-            printf("%s", help_text);
-            return EXIT_FAILURE;
+        if (VERBOSE_LEVEL) {
+            char *your_number_string = digits_to_char(reverse_array(digits));
+            if (your_number_string == NULL) {
+                printf("%s", help_text);
+                return EXIT_FAILURE;
+            }
+            printf("Your number_t is: %s\n", your_number_string);
+            free(your_number_string);
         }
-        printf("Your number_t is: %s\n", your_number_string);
-        free(your_number_string);
 
         result = base_to_base(digits, base, out_base);
         free(digits.data);
@@ -101,7 +111,7 @@ int main(int argc, char **argv) {
         printf("%s", help_text);
         return EXIT_FAILURE;
     }
-    printf("Result is: %s\n", result_string);
+    printf("%s%s\n", VERBOSE_LEVEL ? "Result is: " : "", result_string);
     free(result_string);
     free(result.data);
     return EXIT_SUCCESS;
@@ -162,9 +172,11 @@ array_t interactive() {
 
     array_t digits = get_digits_from_string(input, base);
 
-    char *result_string = digits_to_char(reverse_array(digits));
-    printf("Your number_t is: %s\n", result_string);
-    free(result_string);
+    if (VERBOSE_LEVEL) {
+        char *result_string = digits_to_char(reverse_array(digits));
+        printf("Your number_t is: %s\n", result_string);
+        free(result_string);
+    }
 
     int out_base = 0;
     do {
@@ -311,6 +323,9 @@ array_t base_to_base(array_t input, int source_base, int out_base) {
     int size = input.size;
     int chunk_size = chunk_split_size(source_base, out_base);
     if (chunk_size > 0) {
+        if(VERBOSE_LEVEL>1){
+            printf("Using chunk method of size(%d)\n",chunk_size);
+        }
         array_t result = {size * chunk_size, malloc(sizeof(int) * size * chunk_size)};
         int index = 0;
         for (int i = 0; i < size; i++) {
@@ -427,9 +442,9 @@ int *split_to_prime_factors(int number) {
  */
 array_t prime_factors_to_array(int *factors, int size) {
     int number_of_primes = 0;
-    for(int i=0;i<size;i++){
-        if(factors[i]!=0){
-            number_of_primes+=factors[i];
+    for (int i = 0; i < size; i++) {
+        if (factors[i] != 0) {
+            number_of_primes += factors[i];
         }
     }
     array_t result = {number_of_primes, malloc(sizeof(int) * number_of_primes)};
@@ -454,19 +469,19 @@ void testing_methods() {
 
     digits = change(12345, 4);
     string_result = digits_to_char(digits);
-    assert(strcmp("3000321",string_result)==0);
+    assert(strcmp("3000321", string_result) == 0);
     free(digits.data);
     free(string_result);
 
     digits = change(12345, 8);
     string_result = digits_to_char(digits);
-    assert(strcmp("30071",string_result)==0);
+    assert(strcmp("30071", string_result) == 0);
     free(digits.data);
     free(string_result);
 
     digits = change(45, 2);
     string_result = digits_to_char(digits);
-    assert(strcmp("101101",string_result)==0);
+    assert(strcmp("101101", string_result) == 0);
     free(digits.data);
     free(string_result);
 }
