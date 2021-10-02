@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
         array_t digits = get_digits_from_string(numbers[1], base);
 
         if (VERBOSE_LEVEL) {
-            char *your_number_string = digits_to_char(reverse_array(digits));
+            char *your_number_string = digits_to_char(digits);
             if (your_number_string == NULL) {
                 printf("%s", help_text);
                 return EXIT_FAILURE;
@@ -131,11 +131,11 @@ array_t get_digits_from_string(char *char_digits, int base) {
         printf("number_of_digits(%d)\n", number_of_digits);
     }
     array_t digits = {number_of_digits, (int *) malloc(sizeof(int) * number_of_digits)};
-    for (int i = number_of_digits; i > 0; i--) {
-        char digit_char = char_digits[i - 1];
+    for (int i = 0; i < number_of_digits; i++) {
+        char digit_char = char_digits[i];
         if (DEBUG) {
             printf("get_digits_from_string.digit_char(%c)=get_digits_from_string.digit_int(%d)\n", digit_char,
-                   digit_char);
+                   digit_to_int(digit_char));
         }
         int digit_number = digit_to_int(digit_char);
         while (digit_number >= base || digit_number < 0) {
@@ -143,7 +143,7 @@ array_t get_digits_from_string(char *char_digits, int base) {
             scanf(" %c", &digit_char);
             digit_number = digit_to_int(digit_char);
         }
-        digits.data[number_of_digits - i] = digit_number;
+        digits.data[i] = digit_number;
     }
     return digits;
 }
@@ -173,7 +173,7 @@ array_t interactive() {
     array_t digits = get_digits_from_string(input, base);
 
     if (VERBOSE_LEVEL) {
-        char *result_string = digits_to_char(reverse_array(digits));
+        char *result_string = digits_to_char(digits);
         printf("Your number_t is: %s\n", result_string);
         free(result_string);
     }
@@ -210,9 +210,6 @@ char *digits_to_char(array_t digits) {
         // if digit < 10 then add only 48 since 0-9 ASCII codes are 48-57
         // else add 64 A-Z
         result[i] = (char) (digit + (digit > 9 ? 'A' - 10 : '0'));
-        if (DEBUG) {
-            printf("=print_digits.int_digit(%d)\n", digit);
-        }
     }
     result[size] = 0;
     return result;
@@ -323,28 +320,33 @@ array_t base_to_base(array_t input, int source_base, int out_base) {
     int size = input.size;
     int chunk_size = chunk_split_size(source_base, out_base);
     if (chunk_size > 0) {
-        if(VERBOSE_LEVEL>1){
-            printf("Using chunk method of size(%d)\n",chunk_size);
+        if (VERBOSE_LEVEL > 1 || DEBUG) {
+            printf("Using chunk method of size(%d)\n", chunk_size);
         }
         array_t result = {size * chunk_size, malloc(sizeof(int) * size * chunk_size)};
         int index = 0;
         for (int i = 0; i < size; i++) {
-            int digit = input.data[size - 1 - i];
-            array_t out_base_chunk = reverse_array(dec_to_base(digit, out_base));
+            int digit = input.data[i];
+            array_t out_base_chunk = dec_to_base(digit, out_base);
             if (DEBUG) {
-                printf("%d=%s,%d\n", digit, digits_to_char(out_base_chunk), out_base_chunk.size);
+                char *out_base_chunk_chars = digits_to_char(out_base_chunk);
+                printf("%d=%s,%d\n", digit, out_base_chunk_chars, out_base_chunk.size);
+                free(out_base_chunk_chars);
             }
             for (int j = 0; j < chunk_size; j++) {
                 if (j < out_base_chunk.size) {
-                    result.data[result.size - 1 - index++] = out_base_chunk.data[j];
+                    result.data[chunk_size - 1 - j + index] = out_base_chunk.data[out_base_chunk.size - 1-j];
                 } else {
-                    result.data[result.size - 1 - index++] = 0;
+                    result.data[chunk_size - 1 - j + index] = 0;
                 }
                 if (DEBUG) {
-                    printf("%s   %d  %d   %d \n", digits_to_char(result), j, j < out_base_chunk.size,
+                    char *result_chars = digits_to_char(result);
+                    printf("%s %d %d %d\n", result_chars, j, j < out_base_chunk.size,
                            out_base_chunk.data[j]);
+                    free(result_chars);
                 }
             }
+            index += chunk_size;
             free(out_base_chunk.data);
         }
         return result;
