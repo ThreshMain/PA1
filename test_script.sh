@@ -7,10 +7,11 @@ do
   \time -f "%U user %S system %P CPU max %MKB"  $PROG < "$IN_FILE" > tmp_out.txt
   if ! diff $OUT_FILE tmp_out.txt;
   then
-    echo "Habibi, habibi $IN_FILE";
+    echo $'\e[1;31m'"Habibi, habibi $IN_FILE"$'\e[0m';
   else
-    echo "Swag $IN_FILE";
+    echo $'\e[1;32m'"Swag $IN_FILE"$'\e[0m';
   fi
+  echo
 done
 
 rm tmp_out.txt
