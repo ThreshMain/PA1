@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
-PROG="./a.out"
+COLOR_OFF=$'\033[0m'
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+BLUE=$'\033[0;34m'
+YELLOW=$'\033[0;33m'
+
+CODE_FILE=$(find . -type f -name "*.c")
+
+echo "$BLUE!Compiling! $CODE_FILE $COLOR_OFF"
+g++ "$CODE_FILE" --std=c++14 -Wall -pedantic -Wno-long-long -g -o /tmp/a.out || (echo $'\e[1;31m'"FAILED COMPILING!" && exit 1)
+echo
+echo "$YELLOW""Testing $COLOR_OFF"
+PROG="/tmp/a.out"
 
 FAILED=0
 SOLVED=0
@@ -11,17 +23,17 @@ do
   if ! diff $OUT_FILE tmp_out.txt;
   then
     ((FAILED++))
-    echo $'\e[1;31m'"Habibi, habibi $IN_FILE"$'\e[0m';
+    echo "$RED""Habibi, habibi $IN_FILE $COLOR_OFF";
   else
     ((SOLVED++))
-    echo $'\e[1;32m'"Swag $IN_FILE"$'\e[0m';
+    echo "$GREEN""Swag $IN_FILE"$'\e[0m';
   fi
   echo
 done
 
 COLOR=""
 if (( FAILED != 0 )); then
-  COLOR=$'\e[1;31m'
+  COLOR=$RED
 fi
-echo "$COLOR""Failed($FAILED),"$'\e[1;32m'" Solved($SOLVED)"$'\e[0m';
+echo "$COLOR""Failed($FAILED),"$'\e[1;32m'" Solved($SOLVED) $COLOR_OFF";
 rm tmp_out.txt
