@@ -8,7 +8,7 @@ YELLOW=$'\033[0;33m'
 CODE_FILE=$(find . -type f -name "*.c")
 
 echo "$BLUE!Compiling! $CODE_FILE $COLOR_OFF"
-g++ "$CODE_FILE" --std=c++14 -Wall -pedantic -Wno-long-long -g -o /tmp/a.out || (echo $'\e[1;31m'"FAILED COMPILING!" && exit 1)
+g++ "$CODE_FILE" --std=c++14 -Wall -pedantic -Wno-long-long -g -o /tmp/a.out || (echo "$RED""FAILED COMPILING!" && kill -SIGPIPE $$)
 echo
 echo "$YELLOW""Testing $COLOR_OFF"
 PROG="/tmp/a.out"
