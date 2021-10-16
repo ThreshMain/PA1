@@ -1,0 +1,4 @@
+Velikost latky:
+Velikost plachty:
+Prekryv:
+Pocet kusu latky: 16
