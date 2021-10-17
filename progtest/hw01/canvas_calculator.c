@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <float.h>
 
@@ -72,33 +73,41 @@ int verify_rectangle(rectangle_t *rectangle) {
     return bigger_then(rectangle->height, 0) && bigger_then(rectangle->width, 0);
 }
 
+rectangle_t *load_rectangle(char *message) {
+    rectangle_t *rectangle = (rectangle_t*) malloc(sizeof(rectangle_t));
+    if (message != NULL) {
+        printf("%s", message);
+    }
+    if (scanf("%lf %lf", &rectangle->width, &rectangle->height) == 2 &&
+        verify_rectangle(rectangle)) {
+        return rectangle;
+    }
+    return NULL;
+}
+
+
 int main(int argc, char **argv) {
-    rectangle_t piece, desired;
+    rectangle_t *piece, *desired;
     double overlap;
-    printf("Velikost latky:\n");
     int needed;
-    if (scanf("%lf %lf", &piece.width, &piece.height) == 2 &&
-        verify_rectangle(&piece)) {
-        printf("Velikost plachty:\n");
-        if (scanf("%lf %lf", &desired.width, &desired.height) == 2 &&
-            verify_rectangle(&desired)) {
-            needed = minimal_count(&piece, &desired, 0);
-            if (needed > 1) {
-                printf("Prekryv:\n");
-                if (scanf("%lf", &overlap) == 1 && overlap >= 0) {
-                    needed = minimal_count(&piece, &desired, overlap);
-                    if (needed != -1) {
-                        printf("Pocet kusu latky: %d\n", needed);
-                        return 0;
-                    } else {
-                        printf("Nelze vyrobit.\n");
-                        return 1;
-                    }
+    if ((piece = load_rectangle("Velikost latky:\n")) != NULL &&
+        (desired = load_rectangle("Velikost plachty:\n")) != NULL) {
+        needed = minimal_count(piece, desired, 0);
+        if (needed > 1) {
+            printf("Prekryv:\n");
+            if (scanf("%lf", &overlap) == 1 && overlap >= 0) {
+                needed = minimal_count(piece, desired, overlap);
+                if (needed != -1) {
+                    printf("Pocet kusu latky: %d\n", needed);
+                    return 0;
+                } else {
+                    printf("Nelze vyrobit.\n");
+                    return 1;
                 }
-            } else {
-                printf("Pocet kusu latky: %d\n", needed);
-                return 0;
             }
+        } else {
+            printf("Pocet kusu latky: %d\n", needed);
+            return 0;
         }
     }
     printf("Nespravny vstup.\n");
