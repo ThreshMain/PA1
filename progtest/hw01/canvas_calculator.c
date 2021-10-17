@@ -1,34 +1,53 @@
 #include <stdio.h>
+#include <math.h>
+#include <float.h>
 
 typedef struct {
     double width;
     double height;
 } rectangle_t;
 
+int equals(double x, double y) {
+    return fabs(x - y) < (DBL_EPSILON * fabs(x + y));
+}
+
+int custom_round(double number) {
+    int int_number = (int) number;
+    if (equals(int_number, number)) {
+        return int_number;
+    }
+    return int_number + 1;
+}
+
+int bigger_then(double number, double bigger_then) {
+    return number > bigger_then && !equals(number, bigger_then);
+}
 
 int count_needed(rectangle_t piece, rectangle_t desired, double overlap) {
     int width = 1;
     int height = 1;
     desired.width -= piece.width;
     desired.height -= piece.height;
-    while (desired.width > 0 || desired.height > 0) {
-        if (desired.width > 0) {
+    if (bigger_then(desired.width, 0) || bigger_then(desired.height, 0)) {
+        if (bigger_then(desired.width, 0)) {
             if (piece.width <= overlap) {
                 return -1;
             } else {
-                width++;
-                desired.width -= piece.width - overlap;
+                piece.width -= overlap;
+                width += custom_round(desired.width / piece.width);
             }
-        } else {
+        }
+        if (bigger_then(desired.height, 0)) {
             if (piece.height <= overlap) {
                 return -1;
             } else {
-                height++;
-                desired.height -= piece.height - overlap;
+                piece.height -= overlap;
+                height += custom_round(desired.height / piece.height);
             }
         }
+        return height * width;
     }
-    return width * height;
+    return 1;
 }
 
 void rotate_rectangle(rectangle_t *rectangle) {
@@ -41,11 +60,11 @@ int minimal_count(rectangle_t *piece, rectangle_t *desired, double overlap) {
     int count = count_needed(*piece, *desired, overlap);
     rotate_rectangle(piece);
     int rotated_count = count_needed(*piece, *desired, overlap);
-    return count < rotated_count && count != -1 ? count : rotated_count;
+    return count < rotated_count && count > 0 ? count : rotated_count;
 }
 
 int verify_rectangle(rectangle_t *rectangle) {
-    return rectangle->height > 0 && rectangle->width > 0;
+    return bigger_then(rectangle->height, 0) && bigger_then(rectangle->width, 0);
 }
 
 int main(int argc, char **argv) {
