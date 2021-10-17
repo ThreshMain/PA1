@@ -23,25 +23,30 @@ int bigger_then(double number, double bigger_then) {
     return number > bigger_then && !equals(number, bigger_then);
 }
 
+int smaller_or_equal(double number, double bigger_then) {
+    return number < bigger_then || equals(number, bigger_then);
+}
+
 int count_needed(rectangle_t piece, rectangle_t desired, double overlap) {
     int width = 1;
     int height = 1;
     desired.width -= piece.width;
     desired.height -= piece.height;
+
+    piece.width -= overlap;
+    piece.height -= overlap;
     if (bigger_then(desired.width, 0) || bigger_then(desired.height, 0)) {
         if (bigger_then(desired.width, 0)) {
-            if (piece.width <= overlap) {
+            if (smaller_or_equal(piece.width,0)) {
                 return -1;
             } else {
-                piece.width -= overlap;
                 width += custom_round(desired.width / piece.width);
             }
         }
         if (bigger_then(desired.height, 0)) {
-            if (piece.height <= overlap) {
+            if (smaller_or_equal(piece.height,0)) {
                 return -1;
             } else {
-                piece.height -= overlap;
                 height += custom_round(desired.height / piece.height);
             }
         }
