@@ -73,43 +73,41 @@ int verify_rectangle(rectangle_t *rectangle) {
     return bigger_then(rectangle->height, 0) && bigger_then(rectangle->width, 0);
 }
 
-rectangle_t *load_rectangle(char *message) {
-    rectangle_t *rectangle = (rectangle_t*) malloc(sizeof(rectangle_t));
+int load_rectangle(char *message,rectangle_t *result) {
     if (message != NULL) {
         printf("%s", message);
     }
-    if (scanf("%lf %lf", &rectangle->width, &rectangle->height) == 2 &&
-        verify_rectangle(rectangle)) {
-        return rectangle;
+    if (scanf("%lf %lf", &result->width, &result->height) == 2 &&
+        verify_rectangle(result)) {
+        return EXIT_SUCCESS;
     }
-    return NULL;
+    return EXIT_FAILURE;
 }
 
-
 int main(int argc, char **argv) {
-    rectangle_t *piece, *desired;
+    rectangle_t piece, desired;
     double overlap;
     int needed;
-    if ((piece = load_rectangle("Velikost latky:\n")) != NULL &&
-        (desired = load_rectangle("Velikost plachty:\n")) != NULL) {
-        needed = minimal_count(piece, desired, 0);
+    if (load_rectangle("Velikost latky:\n",&piece) == EXIT_SUCCESS &&
+        load_rectangle("Velikost plachty:\n",&desired) == EXIT_SUCCESS) {
+        needed = minimal_count(&piece, &desired, 0);
         if (needed > 1) {
             printf("Prekryv:\n");
             if (scanf("%lf", &overlap) == 1 && overlap >= 0) {
-                needed = minimal_count(piece, desired, overlap);
+                needed = minimal_count(&piece, &desired, overlap);
                 if (needed != -1) {
                     printf("Pocet kusu latky: %d\n", needed);
-                    return 0;
+                    return EXIT_SUCCESS;
                 } else {
                     printf("Nelze vyrobit.\n");
-                    return 1;
+                    return EXIT_FAILURE;
                 }
             }
         } else {
             printf("Pocet kusu latky: %d\n", needed);
-            return 0;
+            return EXIT_SUCCESS;
         }
     }
     printf("Nespravny vstup.\n");
-    return 1;
+    return EXIT_FAILURE;
 }
