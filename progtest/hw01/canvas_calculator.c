@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     rectangle_t piece, desired;
     double overlap;
     printf("Velikost latky:\n");
-    int needed = 0;
+    int needed;
     if (scanf("%lf %lf", &piece.width, &piece.height) == 2 &&
         verify_rectangle(&piece)) {
         printf("Velikost plachty:\n");
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
             needed = minimal_count(&piece, &desired, 0);
             if (needed > 1) {
                 printf("Prekryv:\n");
-                if (scanf("%lf", &overlap) == 1) {
+                if (scanf("%lf", &overlap) == 1 && overlap >= 0) {
                     needed = minimal_count(&piece, &desired, overlap);
                     if (needed != -1) {
                         printf("Pocet kusu latky: %d\n", needed);
