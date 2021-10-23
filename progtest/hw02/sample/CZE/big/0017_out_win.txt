@@ -1,0 +1,21 @@
+Pozice a soustava:
+429282da93d
+      ^
+71f10555759
+         ^
+7b1cd8ca55b
+^
+316f63f7c9a
+        ^
+49c117ba20d
+          ^
+51866ef67b8
+    ^
+52340bfdf39
+^
+3bde20f11f3
+    ^
+5f0b322c3f6
+^
+1e256cb427e
+  ^
