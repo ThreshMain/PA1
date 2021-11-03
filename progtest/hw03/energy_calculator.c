@@ -157,7 +157,7 @@ int normalizeDate(date_time *date, const int changeCost[], const int zeroCost[])
     if (date->minute >= 60) {
         consumption += zeroCost[5];
         date->minute -= 60;
-        if(date->hour<23){
+        if (date->hour < 23) {
             consumption += changeCost[date->hour % 10];
         }
         date->hour += 1;
@@ -220,12 +220,14 @@ int energyConsumption(int y1, int m1, int d1, int h1, int i1,
 
         if (from.hour > to.hour) {
             difference = 24 - from.hour;
-            *consumption += difference * hourMultiplier + (difference > 20) * 30;
-            if (difference > 10) {
+            *consumption += difference * hourMultiplier + (difference / 10) * 30;
+            if (from.hour % 10 >= 4) {
+                *consumption -= 30;
                 *consumption += arraySum(changeCost, changeCostLength, from.hour % 10, 0);
                 from.hour -= from.hour % 10;
             }
-            *consumption += arraySum(changeCost, changeCostLength, from.hour % 10, 3) +
+            *consumption += arraySum(changeCost, changeCostLength, from.hour % 10, 4) -
+                            (from.hour % 10 == 4 ? 0 : 3) +
                             arraySum(changeCost, changeCostLength, from.hour / 10, 2);
             from.hour = 24;
             *consumption += normalizeDate(&from, changeCost, zeroCost);
