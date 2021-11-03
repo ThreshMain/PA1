@@ -137,7 +137,7 @@ long long numberOfDays(date_time *from, date_time *to) {
         month = 0;
         year++;
     }
-    while (year < to->year) {//37680
+    while (year < to->year) {
         if (isLeapYear(year)) {
             count += 366;
         } else {
