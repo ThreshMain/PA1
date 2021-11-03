@@ -122,16 +122,16 @@ int arraySum(const int array[], int arrayLength, int from, int to) {
     return sum;
 }
 
-long leapYearsBeforeYear(int year) {
+long long leapYearsBeforeYear(long year) {
     return year / 4 - year / 100 + year / 400 - year / 4000;
 }
 
 long long numberOfDays(date_time *from, date_time *to) {
     long long count = 0;
-    int year = from->year;
+    long year = from->year;
     int month = from->month;
     int day = from->day;
-    if (month > to->month || year > to->year) {
+    if (month > to->month || year < to->year) {
         count += daysInMonth(year, month) - day + 1;
         day = 0;
         month++;
@@ -141,9 +141,11 @@ long long numberOfDays(date_time *from, date_time *to) {
         month = 0;
         year++;
     }
-    count += 365 * (to->year - year);
-    count += leapYearsBeforeYear(to->year-1) - leapYearsBeforeYear(year-1);
-    year = to->year;
+    if (year < to->year) {
+        count += 365 * (to->year - year);
+        count += leapYearsBeforeYear(to->year - 1) - leapYearsBeforeYear(year - 1);
+        year = to->year;
+    }
     while (month < to->month) {
         count += daysInMonth(year, month);
         month++;
