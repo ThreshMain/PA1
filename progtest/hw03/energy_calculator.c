@@ -157,7 +157,9 @@ int normalizeDate(date_time *date, const int changeCost[], const int zeroCost[])
     if (date->minute >= 60) {
         consumption += zeroCost[5];
         date->minute -= 60;
-        consumption += changeCost[date->hour % 10];
+        if(date->hour<23){
+            consumption += changeCost[date->hour % 10];
+        }
         date->hour += 1;
     }
     if (date->hour == 24) {
@@ -200,7 +202,7 @@ int energyConsumption(int y1, int m1, int d1, int h1, int i1,
 
         if (from.minute > to.minute) {
             difference = 60 - from.minute;
-            *consumption += (difference) * minuteMultiplier + difference/10 * 30 +
+            *consumption += (difference) * minuteMultiplier + difference / 10 * 30 +
                             arraySum(changeCost, changeCostLength, from.minute % 10, 0) +
                             arraySum(changeCost, changeCostLength, from.minute / 10, 5);
             from.minute = 60;
@@ -219,11 +221,11 @@ int energyConsumption(int y1, int m1, int d1, int h1, int i1,
         if (from.hour > to.hour) {
             difference = 24 - from.hour;
             *consumption += difference * hourMultiplier + (difference > 20) * 30;
-            if(difference>10){
+            if (difference > 10) {
                 *consumption += arraySum(changeCost, changeCostLength, from.hour % 10, 0);
-                from.hour-=from.hour%10;
+                from.hour -= from.hour % 10;
             }
-            *consumption += arraySum(changeCost, changeCostLength, from.hour%10, 3) +
+            *consumption += arraySum(changeCost, changeCostLength, from.hour % 10, 3) +
                             arraySum(changeCost, changeCostLength, from.hour / 10, 2);
             from.hour = 24;
             *consumption += normalizeDate(&from, changeCost, zeroCost);
