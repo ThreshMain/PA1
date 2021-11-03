@@ -127,19 +127,17 @@ long long numberOfDays(date_time *from, date_time *to) {
     int year = from->year;
     int month = from->month;
     int day = from->day;
-    if (month == to->month && year == to->year) {
-        count += day - daysInMonth(year, month);
+    if (month > to->month || year > to->year) {
+        count += daysInMonth(year, month) - day + 1;
         day = 0;
         month++;
-    }
-    if (month > to->month) {
         for (; month <= 12; ++month) {
             count += daysInMonth(year, month);
         }
         month = 0;
         year++;
     }
-    while (year < to->year) {
+    while (year < to->year) {//37680
         if (isLeapYear(year)) {
             count += 366;
         } else {
@@ -236,7 +234,6 @@ int energyConsumption(int y1, int m1, int d1, int h1, int i1,
         if (dateTimeCompare(&from, &to) == 0) {
             return 1;
         }
-
         *consumption += (hourMultiplier * 24 + 86) * numberOfDays(&from, &to);
         return 1;
     }
