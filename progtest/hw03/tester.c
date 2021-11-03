@@ -11,7 +11,7 @@ int x = 0;
 
 void assertEquals(long long int b, long long int a) {
     if (a != b) {
-        printf("Expected %lld got %lld", a, b);
+        printf("Expected %lld got %lld diff %lld", a, b,a-b);
     } else {
         printf("SUCCESS");
     }
@@ -65,6 +65,21 @@ int main(int argc, char *argv[]) {
     printf("15\n");
     assertEquals(energyConsumption(1904, 1, 4, 1, 22, 2166, 2, 15, 6, 16, &consumption), 1);
     assertEquals(consumption, 28040086770LL);
+    printf("16\n");
+    assertEquals(energyConsumption ( 1968, 11, 7, 4, 33, 2072, 1, 6, 6, 53, &consumption ),1);
+    assertEquals(consumption, 11035972950);
+    printf("17\n");
+    assertEquals(energyConsumption ( 1947, 11, 27, 21, 41,
+                                        2051,  1,  2,  2, 18, &consumption ),1);
+    assertEquals(consumption,11028971561);
+    printf("18\n");
+    assertEquals(energyConsumption ( 1910, 11, 1, 3, 9,
+                                     1983, 2, 17, 6, 31, &consumption ),1);
+    assertEquals(consumption,7733988800);
+    printf("19\n");
+    assertEquals(energyConsumption ( 2059, 7, 4, 0, 47,
+                                     2073, 1, 11, 0, 24, &consumption ),1);
+    assertEquals(consumption,1446852166);
     return 0;
 }
 
