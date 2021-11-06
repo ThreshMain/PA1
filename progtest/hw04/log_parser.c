@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 #define MAX_ID 99999
 #define MIN_ID 0
@@ -9,12 +8,6 @@ int rangeCheck(long number,long max,long min){
     return number>=min&&number<=max;
 }
 
-int arrayContains(int array[],int length,int value){
-    for (int i = 0; i < length; i++) {
-        if(array[i]==value) return 1;
-    }
-    return 0;
-}
 long arrayUniqueCount(int array[],long from,long to){
     long count=0;
     int unique[MAX_ID+1]={0};
@@ -68,7 +61,7 @@ int executeOperation(char operation,int log[],int counter[],int *index){
             case '+':
                 result = addLogRecord(*index, log,counter);
                 *index+=1;
-                if(*index>=MAX_ACCESS_COUNT) return 0;
+                if(*index>MAX_ACCESS_COUNT) return 0;
                 wantedResult=1;
                 break;
             case '?':
@@ -101,6 +94,9 @@ int parseLog(){
 }
 
 int main(void){
-    parseLog();
-    printf("Nespravny vstup.\n");
+    if(!parseLog()){
+        printf("Nespravny vstup.\n");
+        return 1;
+    }
+    return 0;
 }
