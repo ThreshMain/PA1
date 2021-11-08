@@ -76,8 +76,8 @@ int executeOperation(char operation,int log[],int counter[],int *index){
 }
 
 int parseLog(){
-    int log[MAX_ACCESS_COUNT+1];
-    int counter[MAX_ID+1];
+    static int log[MAX_ACCESS_COUNT+1]={0};
+    static int counter[MAX_ID+1]={0};
     printf("Pozadavky:\n");
     int index=0;
     int result;
