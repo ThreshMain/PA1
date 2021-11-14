@@ -2,26 +2,26 @@
 #include <string.h>
 #include <malloc.h>
 
-typedef struct item {
+typedef struct {
     char name[100];
     unsigned int hash;
     int count;
 } item_t;
 
-typedef struct array {
+typedef struct {
     int size;
     int capacity;
-    item_t *items;
+    item_t **items;
 } item_array_t;
 
-typedef struct hash_map {
+typedef struct {
     item_array_t **items;
     int bucket_size;
     int unique_count;
 } hash_map_t;
 
 unsigned int hash_string(char *str) {
-    unsigned int hash = 0;
+    unsigned int hash = 149;
     char c;
     while ((c = *str++)) {
         hash = c + (hash << 6);
@@ -33,28 +33,36 @@ item_array_t *create_array(int capacity) {
     item_array_t *array = (item_array_t *) malloc(sizeof(item_array_t));
     array->size = 0;
     array->capacity = capacity;
-    array->items = (item_t *) malloc(sizeof(item_t) * capacity);
+    array->items = (item_t **) malloc(sizeof(item_t*) * capacity);
     return array;
 }
 
-int add_item_to_array(item_array_t *array, item_t item) {
+int add_item_to_array(item_array_t *array, item_t *item) {
     if (array->size == array->capacity) {
         array->capacity *= 2;
-        array->items = (item_t *) realloc(array->items, sizeof(item_t) * array->capacity);
+        array->items = (item_t **) realloc(array->items, sizeof(item_t*) * array->capacity);
     }
     array->items[array->size] = item;
     return ++(array->size);
+}
+
+void free_array(item_array_t *array) {
+    for (int i = 0; i < array->size; ++i) {
+        free(array->items[i]);
+    }
+    free(array->items);
+    free(array);
 }
 
 item_t *get_last_item(item_array_t *array) {
     if (array->size == 0) {
         return NULL;
     }
-    return &array->items[array->size - 1];
+    return array->items[array->size - 1];
 }
 
 void swap_items(item_array_t *array, int from, int to) {
-    item_t item = array->items[from];
+    item_t *item = array->items[from];
     array->items[from] = array->items[to];
     array->items[to] = item;
 }
@@ -71,12 +79,12 @@ void resize_hash_map(hash_map_t *map) {
     for (int i = 0; i < map->bucket_size; ++i) {
         item_array_t *bucket = old_items[i];
         for (int j = 0; j < bucket->size; ++j) {
-            item_t item = bucket->items[j];
-            int index = item.hash % (map->bucket_size * 2);
+            item_t *item = bucket->items[j];
+            int index = item->hash % (map->bucket_size * 2);
             add_item_to_array(map->items[index], item);
         }
-        free(old_items[i]->items);
-        free(old_items[i]);
+        free(bucket->items);
+        free(bucket);
     }
     map->bucket_size *= 2;
     free(old_items);
@@ -87,18 +95,18 @@ item_t *add_item(hash_map_t *map, char *name) {
     unsigned int bucket_number = hash % map->bucket_size;
     item_array_t *bucket = map->items[bucket_number];
     for (int i = 0; i < bucket->size; ++i) {
-        if (strcmp(bucket->items[i].name, name) == 0) {
-            bucket->items[i].count++;
-            return &bucket->items[i];
+        if (strcmp(bucket->items[i]->name, name) == 0) {
+            bucket->items[i]->count++;
+            return bucket->items[i];
         }
     }
-    item_t item;
-    item.hash = hash;
-    item.count = 1;
-    strcpy(item.name, name);
+    item_t *item = (item_t *) malloc(sizeof(item_t));
+    item->hash = hash;
+    item->count = 1;
+    strcpy(item->name, name);
     add_item_to_array(bucket, item);
     map->unique_count++;
-    return &bucket->items[bucket->size - 1];
+    return bucket->items[bucket->size - 1];
 }
 
 hash_map_t *create_map(int bucket_size) {
@@ -113,8 +121,7 @@ hash_map_t *create_map(int bucket_size) {
 
 void free_hash_map(hash_map_t *map) {
     for (int i = 0; i < map->bucket_size; ++i) {
-        free(map->items[i]->items);
-        free(map->items[i]);
+        free_array(map->items[i]);
     }
     free(map->items);
     free(map);
@@ -123,29 +130,28 @@ void free_hash_map(hash_map_t *map) {
 void update_common_items(item_array_t *common_items, item_t *item, int number_of_items) {
     int from = -1, to = -1;
     for (int i = 0; i < common_items->size; ++i) {
-        if (common_items->items[i].count >= item->count) {
-            to = i;
-        }
-        if (strcmp(common_items->items[i].name, item->name) == 0) {
-            common_items->items[i].count = item->count;
+        if (common_items->items[i] == item) {
             from = i;
             break;
+        }
+        if (common_items->items[i]->count >= item->count) {
+            to = i;
         }
     }
     if (from != -1) {
         to++;
         if (to < from) swap_items(common_items, from, to);
     } else if (common_items->size < number_of_items) {
-        add_item_to_array(common_items, *item);
+        add_item_to_array(common_items, item);
         return;
     } else if (get_last_item(common_items)->count == item->count) {
-        add_item_to_array(common_items, *item);
+        add_item_to_array(common_items, item);
         return;
     }
     if (common_items->size > number_of_items) {
         int new_size = number_of_items;
-        int count = common_items->items[new_size - 1].count;
-        while (new_size < common_items->size && common_items->items[new_size].count == count) {
+        int count = common_items->items[new_size - 1]->count;
+        while (new_size < common_items->size && common_items->items[new_size]->count == count) {
             new_size++;
         }
         common_items->size = new_size;
@@ -171,11 +177,11 @@ void print_most_common_items(item_array_t *common_items) {
     int same_count_first = -1;
     int same_count_last = 0;
     for (int i = 0; i < common_items->size; ++i) {
-        if (count != common_items->items[i].count) {
-            count = common_items->items[i].count;
+        if (count != common_items->items[i]->count) {
+            count = common_items->items[i]->count;
             int same_count = 0;
             same_count_first = same_count_last = i + 1;
-            while (same_count_last < common_items->size && common_items->items[same_count_last].count == count) {
+            while (same_count_last < common_items->size && common_items->items[same_count_last]->count == count) {
                 same_count_last++;
                 same_count++;
             }
@@ -188,14 +194,14 @@ void print_most_common_items(item_array_t *common_items) {
         } else {
             printf("%d.", i + 1);
         }
-        printf(" %s, %dx\n", common_items->items[i].name, count);
+        printf(" %s, %dx\n", common_items->items[i]->name, count);
     }
 }
 
 int sum_array(item_array_t *array) {
     int sum = 0;
     for (int i = 0; i < array->size; ++i) {
-        sum += array->items[i].count;
+        sum += array->items[i]->count;
     }
     return sum;
 }
