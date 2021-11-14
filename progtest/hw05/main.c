@@ -4,6 +4,7 @@
 
 typedef struct item {
     char name[100];
+    unsigned int hash;
     int count;
 } item_t;
 
@@ -14,53 +15,18 @@ typedef struct array {
 } item_array_t;
 
 typedef struct hash_map {
-    item_array_t *items;
+    item_array_t **items;
     int bucket_size;
+    int unique_count;
 } hash_map_t;
 
-item_t *add_item(hash_map_t *map, char *name) {
-    int hash = 0;
-    for (int i = 0; name[i] != '\0'; i++) {
-        hash += name[i];
+unsigned int hash_string(char *str) {
+    unsigned int hash = 0;
+    char c;
+    while ((c = *str++)) {
+        hash = c + (hash << 6);
     }
-    hash = hash % map->bucket_size;
-    item_array_t bucket = map->items[hash];
-    for (int i = 0; i < bucket.size; ++i) {
-        if (strcmp(bucket.items[i].name, name) == 0) {
-            bucket.items[i].count++;
-            map->items[hash] = bucket;
-            return &bucket.items[i];
-        }
-    }
-    if (bucket.size == bucket.capacity) {
-        bucket.capacity *= 2;
-        bucket.items = (item_t *) realloc(bucket.items, sizeof(item_t) * bucket.capacity);
-    }
-    bucket.items[bucket.size].count = 1;
-    strcpy(bucket.items[bucket.size].name, name);
-    bucket.size++;
-    map->items[hash] = bucket;
-    return &bucket.items[bucket.size - 1];
-}
-
-hash_map_t *create_map(int bucket_size) {
-    hash_map_t *map = (hash_map_t *) malloc(sizeof(hash_map_t));
-    map->bucket_size = bucket_size;
-    map->items = (item_array_t *) malloc(sizeof(item_array_t) * bucket_size);
-    for (int i = 0; i < bucket_size; ++i) {
-        map->items[i].size = 0;
-        map->items[i].capacity = 1;
-        map->items[i].items = (item_t *) malloc(sizeof(item_t));
-    }
-    return map;
-}
-
-void free_hash_map(hash_map_t *map) {
-    for (int i = 0; i < map->bucket_size; ++i) {
-        free(map->items[i].items);
-    }
-    free(map->items);
-    free(map);
+    return hash;
 }
 
 item_array_t *create_array(int capacity) {
@@ -91,6 +57,67 @@ void swap_items(item_array_t *array, int from, int to) {
     item_t item = array->items[from];
     array->items[from] = array->items[to];
     array->items[to] = item;
+}
+
+void resize_hash_map(hash_map_t *map) {
+    if (map->bucket_size > map->unique_count) {
+        return;
+    }
+    item_array_t **old_items = map->items;
+    map->items = (item_array_t **) malloc(sizeof(item_array_t *) * map->bucket_size * 2);
+    for (int i = 0; i < map->bucket_size * 2; i++) {
+        map->items[i] = create_array(1);
+    }
+    for (int i = 0; i < map->bucket_size; ++i) {
+        item_array_t *bucket = old_items[i];
+        for (int j = 0; j < bucket->size; ++j) {
+            item_t item = bucket->items[j];
+            int index = item.hash % (map->bucket_size * 2);
+            add_item_to_array(map->items[index], item);
+        }
+        free(old_items[i]->items);
+        free(old_items[i]);
+    }
+    map->bucket_size *= 2;
+    free(old_items);
+}
+
+item_t *add_item(hash_map_t *map, char *name) {
+    unsigned int hash = hash_string(name);
+    unsigned int bucket_number = hash % map->bucket_size;
+    item_array_t *bucket = map->items[bucket_number];
+    for (int i = 0; i < bucket->size; ++i) {
+        if (strcmp(bucket->items[i].name, name) == 0) {
+            bucket->items[i].count++;
+            return &bucket->items[i];
+        }
+    }
+    item_t item;
+    item.hash = hash;
+    item.count = 1;
+    strcpy(item.name, name);
+    add_item_to_array(bucket, item);
+    map->unique_count++;
+    return &bucket->items[bucket->size - 1];
+}
+
+hash_map_t *create_map(int bucket_size) {
+    hash_map_t *map = (hash_map_t *) malloc(sizeof(hash_map_t));
+    map->bucket_size = bucket_size;
+    map->items = (item_array_t **) malloc(sizeof(item_array_t *) * bucket_size);
+    for (int i = 0; i < bucket_size; ++i) {
+        map->items[i] = create_array(1);
+    }
+    return map;
+}
+
+void free_hash_map(hash_map_t *map) {
+    for (int i = 0; i < map->bucket_size; ++i) {
+        free(map->items[i]->items);
+        free(map->items[i]);
+    }
+    free(map->items);
+    free(map);
 }
 
 void update_common_items(item_array_t *common_items, item_t *item, int number_of_items) {
@@ -133,6 +160,7 @@ int add_log_record(hash_map_t *map, item_array_t *common_items, int number_of_it
         if (result == EOF) return EOF;
         return 0;
     }
+    resize_hash_map(map);
     item_t *item = add_item(map, name);
     update_common_items(common_items, item, number_of_items);
     return result;
@@ -147,7 +175,7 @@ void print_most_common_items(item_array_t *common_items) {
             count = common_items->items[i].count;
             int same_count = 0;
             same_count_first = same_count_last = i + 1;
-            while (common_items->items[same_count_last].count == count) {
+            while (same_count_last < common_items->size && common_items->items[same_count_last].count == count) {
                 same_count_last++;
                 same_count++;
             }
@@ -192,7 +220,7 @@ int execute_operation(char operation, hash_map_t *map, item_array_t *common_item
 }
 
 int parseLog() {
-    hash_map_t *map = create_map(100);
+    hash_map_t *map = create_map(128);
     int result;
     int number_of_items = 0;
     char operation;
