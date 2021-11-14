@@ -1,0 +1,18 @@
+Pocet sledovanych:
+Pozadavky:
+1. Milk, 5x
+2. Eggs, 4x
+3. Beer, 3x
+4. Sugar, 2x
+Nejprodavanejsi zbozi: prodano 14 kusu
+1. Milk, 5x
+2.-3. Eggs, 4x
+2.-3. Flour, 4x
+4. Beer, 3x
+Nejprodavanejsi zbozi: prodano 16 kusu
+Nejprodavanejsi zbozi: prodano 17 kusu
+1. Flour, 6x
+2. Milk, 5x
+3. Eggs, 4x
+4. Beer, 3x
+Nejprodavanejsi zbozi: prodano 18 kusu

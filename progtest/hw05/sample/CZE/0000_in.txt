@@ -1,0 +1,28 @@
+4
++ Fruits
++ Milk
++ Milk
++ Sugar
++ Butter
++ Beer
++ Vegetables
++ Milk
++ Beer
++ Milk
++ Beer
++ Sugar
++ Eggs
++ Milk
++ Eggs
++ Eggs
++ Eggs
+#
++ Flour
++ Flour
++ Flour
++ Flour
+#
++ Flour
+?
++ Flour
+#

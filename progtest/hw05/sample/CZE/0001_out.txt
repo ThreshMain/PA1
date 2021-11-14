@@ -1,0 +1,35 @@
+Pocet sledovanych:
+Pozadavky:
+1.-2. Black_tea, 1x
+1.-2. Introduction_to_Algorithms, 1x
+Nejprodavanejsi zbozi: prodano 2 kusu
+Nejprodavanejsi zbozi: prodano 3 kusu
+1.-4. Black_tea, 1x
+1.-4. Caffeine, 1x
+1.-4. C/C++_for_dummies, 1x
+1.-4. Introduction_to_Algorithms, 1x
+Nejprodavanejsi zbozi: prodano 4 kusu
+1. Black_tea, 2x
+2.-4. Caffeine, 1x
+2.-4. C/C++_for_dummies, 1x
+2.-4. Introduction_to_Algorithms, 1x
+Nejprodavanejsi zbozi: prodano 5 kusu
+1.-2. Black_tea, 2x
+1.-2. Caffeine, 2x
+3.-5. C/C++_for_dummies, 1x
+3.-5. Energy_drink, 1x
+3.-5. Introduction_to_Algorithms, 1x
+Nejprodavanejsi zbozi: prodano 7 kusu
+Nejprodavanejsi zbozi: prodano 7 kusu
+Nejprodavanejsi zbozi: prodano 6 kusu
+Nejprodavanejsi zbozi: prodano 7 kusu
+Nejprodavanejsi zbozi: prodano 8 kusu
+1. Energy_drink, 5x
+2. Caffeine, 3x
+3. Black_tea, 2x
+Nejprodavanejsi zbozi: prodano 10 kusu
+1. Energy_drink, 5x
+2. Caffeine, 3x
+3.-4. C/C++_for_dummies, 2x
+3.-4. Black_tea, 2x
+Nejprodavanejsi zbozi: prodano 12 kusu
