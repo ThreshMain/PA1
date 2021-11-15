@@ -33,14 +33,14 @@ item_array_t *create_array(int capacity) {
     item_array_t *array = (item_array_t *) malloc(sizeof(item_array_t));
     array->size = 0;
     array->capacity = capacity;
-    array->items = (item_t **) malloc(sizeof(item_t*) * capacity);
+    array->items = (item_t **) malloc(sizeof(item_t *) * capacity);
     return array;
 }
 
 int add_item_to_array(item_array_t *array, item_t *item) {
     if (array->size == array->capacity) {
         array->capacity *= 2;
-        array->items = (item_t **) realloc(array->items, sizeof(item_t*) * array->capacity);
+        array->items = (item_t **) realloc(array->items, sizeof(item_t *) * array->capacity);
     }
     array->items[array->size] = item;
     return ++(array->size);
@@ -127,27 +127,7 @@ void free_hash_map(hash_map_t *map) {
     free(map);
 }
 
-void update_common_items(item_array_t *common_items, item_t *item, int number_of_items) {
-    int from = -1, to = -1;
-    for (int i = 0; i < common_items->size; ++i) {
-        if (common_items->items[i] == item) {
-            from = i;
-            break;
-        }
-        if (common_items->items[i]->count >= item->count) {
-            to = i;
-        }
-    }
-    if (from != -1) {
-        to++;
-        if (to < from) swap_items(common_items, from, to);
-    } else if (common_items->size < number_of_items) {
-        add_item_to_array(common_items, item);
-        return;
-    } else if (get_last_item(common_items)->count == item->count) {
-        add_item_to_array(common_items, item);
-        return;
-    }
+void common_items_filter(item_array_t *common_items, int number_of_items) {
     if (common_items->size > number_of_items) {
         int new_size = number_of_items;
         int count = common_items->items[new_size - 1]->count;
@@ -157,6 +137,55 @@ void update_common_items(item_array_t *common_items, item_t *item, int number_of
         common_items->size = new_size;
     }
 }
+
+int find_indexes(item_array_t *common_items, item_t *item) {
+    int left = 0;
+    int right = common_items->size - 1;
+    while (left <= right) {
+        int middle = (left + right) / 2;
+        if (common_items->items[middle] == item) {
+            return middle;
+        }
+        if (common_items->items[middle]->count > item->count - 1) {
+            left = middle + 1;
+        } else if (common_items->items[middle]->count < item->count - 1) {
+            right = middle - 1;
+        } else {
+            int tmp = middle;
+            while (tmp > 0 && common_items->items[tmp]->count == item->count - 1) {
+                tmp--;
+                if (common_items->items[tmp] == item) {
+                    return tmp;
+                }
+            }
+            tmp = middle;
+            while (tmp < (common_items->size - 1) && common_items->items[tmp]->count == item->count - 1) {
+                tmp++;
+                if (common_items->items[tmp] == item) {
+                    return tmp;
+                }
+            }
+            return -1;
+        }
+    }
+    return -1;
+}
+
+void update_common_items(item_array_t *common_items, item_t *item, int number_of_items) {
+    int from = find_indexes(common_items, item);
+    if (from != -1) {
+        int to = from;
+        while (to > 0 && common_items->items[to-1]->count < item->count) {
+            to--;
+        }
+        if (to >= 0 && to != from) swap_items(common_items, from, to);
+    } else if (common_items->size < number_of_items || get_last_item(common_items)->count == item->count) {
+        add_item_to_array(common_items, item);
+        return;
+    }
+    common_items_filter(common_items, number_of_items);
+}
+
 
 int add_log_record(hash_map_t *map, item_array_t *common_items, int number_of_items) {
     char name[100];
