@@ -52,6 +52,30 @@ int add_item_to_array(item_array_t *array, item_t *item) {
     return ++(array->size);
 }
 
+/**
+ *
+ * @param array
+ * @param item
+ * @return 1 if removed 0 otherwise
+ */
+int remove_item_from_array(item_array_t *array, item_t *item) {
+    for (int j = 0; j < array->size; ++j) {
+        if (array->items[j] == item) {
+            array->items[j] = array->items[array->size - 1];
+            array->size--;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int array_sum(item_array_t *array) {
+    int sum = 0;
+    for (int i = 0; i < array->size; ++i)
+        sum += array->items[i]->count;
+    return sum;
+}
+
 void free_array(item_array_t *array) {
     for (int i = 0; i < array->size; ++i) {
         free(array->items[i]);
@@ -88,7 +112,7 @@ item_t *add_item(hash_map_t *map, char *name) {
     unsigned int bucket_number = hash % map->bucket_size;
     item_array_t *bucket = map->items[bucket_number];
     for (int i = 0; i < bucket->size; ++i) {
-        if (strcmp(bucket->items[i]->name, name) == 0) {
+        if (bucket->items[i]->hash == hash && strcmp(bucket->items[i]->name, name) == 0) {
             bucket->items[i]->count++;
             return bucket->items[i];
         }
@@ -131,28 +155,25 @@ map_t *create_map(int capacity) {
     return map;
 }
 
+void resize_map(map_t *map, int minimum_capacity) {
+    int new_capacity = map->capacity * 2;
+    while (new_capacity < minimum_capacity) {
+        new_capacity *= 2;
+    }
+    map->records = (item_array_t **) realloc(map->records, sizeof(item_array_t *) * new_capacity);
+    for (int i = map->capacity; i < new_capacity; ++i) {
+        map->records[i] = create_array(1);
+    }
+    map->capacity = new_capacity;
+}
+
 void update_common_items(map_t *map, item_t *item, int number_of_items) {
     if (map->capacity < item->count) {
-        int new_capacity = map->capacity * 2;
-        while (new_capacity < item->count) {
-            new_capacity *= 2;
-        }
-        map->records = (item_array_t **) realloc(map->records, sizeof(item_array_t *) * new_capacity);
-        for (int i = map->capacity; i < new_capacity; ++i) {
-            map->records[i] = create_array(1);
-        }
-        map->capacity = new_capacity;
+        resize_map(map, item->count);
     }
     if (item->count > 1) {
-        item_array_t *old_quantity = map->records[item->count - 2];
-        for (int j = 0; j < old_quantity->size; ++j) {
-            if (old_quantity->items[j] == item) {
-                old_quantity->items[j] = old_quantity->items[old_quantity->size - 1];
-                old_quantity->size--;
-                map->total_sum -= item->count - 1;
-                break;
-            }
-        }
+        if (remove_item_from_array(map->records[item->count - 2], item))
+            map->total_sum -= item->count - 1;
     }
     add_item_to_array(map->records[item->count - 1], item);
     map->total_sum += item->count;
@@ -161,9 +182,7 @@ void update_common_items(map_t *map, item_t *item, int number_of_items) {
         if (sum < number_of_items) {
             sum += map->records[i]->size;
         } else {
-            for (int j = 0; j < map->records[i]->size; ++j) {
-                map->total_sum -= map->records[i]->items[j]->count;
-            }
+            map->total_sum -= array_sum(map->records[i]);
             map->records[i]->size = 0;
         }
     }
@@ -185,7 +204,6 @@ int add_log_record(hash_map_t *map, map_t *common_items, int number_of_items) {
 
 void print_most_common_items(map_t *common_items) {
     int current_position = 1;
-    int sum = 0;
     for (int i = common_items->capacity - 1; i >= 0; --i) {
         item_array_t *array = common_items->records[i];
         if (array->size != 0) {
@@ -197,12 +215,10 @@ void print_most_common_items(map_t *common_items) {
                 } else {
                     printf(" %s, %dx\n", array->items[j]->name, array->items[j]->count);
                 }
-                sum += array->items[j]->count;
             }
             current_position += array->size;
         }
     }
-    printf("Nejprodavanejsi zbozi: prodano %d kusu\n", sum);
 }
 
 int execute_operation(char operation, hash_map_t *map, map_t *common_items, int number_of_items) {
@@ -213,8 +229,6 @@ int execute_operation(char operation, hash_map_t *map, map_t *common_items, int 
             break;
         case '#':
             print_most_common_items(common_items);
-            result = 1;
-            break;
         case '?':
             printf("Nejprodavanejsi zbozi: prodano %d kusu\n", common_items->total_sum);
             result = 1;
