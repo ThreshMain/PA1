@@ -22,6 +22,7 @@ typedef struct {
 
 typedef struct {
     int capacity;
+    int total_sum;
     item_array_t **records;
 } map_t;
 
@@ -122,8 +123,9 @@ void free_hash_map(hash_map_t *map) {
 map_t *create_map(int capacity) {
     map_t *map = (map_t *) malloc(sizeof(map_t));
     map->capacity = capacity;
+    map->total_sum = 0;
     map->records = (item_array_t **) malloc(sizeof(item_array_t *) * map->capacity);
-    for (int i = 0; i < map->capacity; ++i){
+    for (int i = 0; i < map->capacity; ++i) {
         map->records[i] = create_array(1);
     }
     return map;
@@ -135,29 +137,34 @@ void update_common_items(map_t *map, item_t *item, int number_of_items) {
         while (new_capacity < item->count) {
             new_capacity *= 2;
         }
-        map->records = (item_array_t**) realloc(map->records, sizeof(item_array_t *) * new_capacity);
+        map->records = (item_array_t **) realloc(map->records, sizeof(item_array_t *) * new_capacity);
         for (int i = map->capacity; i < new_capacity; ++i) {
             map->records[i] = create_array(1);
         }
-        map->capacity= new_capacity;
+        map->capacity = new_capacity;
     }
-    if(item->count>1){
+    if (item->count > 1) {
         item_array_t *old_quantity = map->records[item->count - 2];
         for (int j = 0; j < old_quantity->size; ++j) {
             if (old_quantity->items[j] == item) {
                 old_quantity->items[j] = old_quantity->items[old_quantity->size - 1];
                 old_quantity->size--;
+                map->total_sum -= item->count - 1;
                 break;
             }
         }
     }
-    add_item_to_array(map->records[item->count-1], item);
+    add_item_to_array(map->records[item->count - 1], item);
+    map->total_sum += item->count;
     int sum = 0;
-    for (int i = map->capacity-1; i >=0 ; --i) {
+    for (int i = map->capacity - 1; i >= 0; --i) {
         if (sum < number_of_items) {
             sum += map->records[i]->size;
         } else {
-            map->records[i]->size=0;
+            for (int j = 0; j < map->records[i]->size; ++j) {
+                map->total_sum -= map->records[i]->items[j]->count;
+            }
+            map->records[i]->size = 0;
         }
     }
 }
@@ -178,34 +185,24 @@ int add_log_record(hash_map_t *map, map_t *common_items, int number_of_items) {
 
 void print_most_common_items(map_t *common_items) {
     int current_position = 1;
-    int sum=0;
+    int sum = 0;
     for (int i = common_items->capacity - 1; i >= 0; --i) {
         item_array_t *array = common_items->records[i];
         if (array->size != 0) {
             for (int j = 0; j < array->size; ++j) {
                 printf("%d.", current_position);
                 if (array->size > 1) {
-                    printf("-%d. %s, %dx\n", current_position + array->size-1, array->items[j]->name,
+                    printf("-%d. %s, %dx\n", current_position + array->size - 1, array->items[j]->name,
                            array->items[j]->count);
                 } else {
                     printf(" %s, %dx\n", array->items[j]->name, array->items[j]->count);
                 }
-                sum+=array->items[j]->count;
+                sum += array->items[j]->count;
             }
-            current_position+=array->size;
+            current_position += array->size;
         }
     }
     printf("Nejprodavanejsi zbozi: prodano %d kusu\n", sum);
-}
-
-int sum_map(map_t *map) {
-    int sum = 0;
-    for (int i = 0; i < map->capacity; ++i) {
-        for (int j = 0; j < map->records[i]->size; ++j) {
-            sum += map->records[i]->items[j]->count;
-        }
-    }
-    return sum;
 }
 
 int execute_operation(char operation, hash_map_t *map, map_t *common_items, int number_of_items) {
@@ -219,7 +216,7 @@ int execute_operation(char operation, hash_map_t *map, map_t *common_items, int 
             result = 1;
             break;
         case '?':
-            printf("Nejprodavanejsi zbozi: prodano %d kusu\n", sum_map(common_items));
+            printf("Nejprodavanejsi zbozi: prodano %d kusu\n", common_items->total_sum);
             result = 1;
             break;
         default:
