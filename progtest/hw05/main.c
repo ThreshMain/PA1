@@ -86,13 +86,6 @@ int remove_item_from_array(item_array_t *array, int index) {
     return 0;
 }
 
-int array_sum(item_array_t *array) {
-    int sum = 0;
-    for (int i = 0; i < array->size; ++i)
-        sum += array->items[i]->count;
-    return sum;
-}
-
 void free_array(item_array_t *array) {
     for (int i = 0; i < array->size; ++i) {
         free(array->items[i]);
@@ -196,7 +189,7 @@ void update_common_items(map_t *map, item_t *item, int number_of_items) {
         if (sum < number_of_items) {
             sum += map->records[i]->size;
         } else {
-            map->total_sum -= array_sum(map->records[i]);
+            map->total_sum -= map->records[i]->size*(i+1);
             map->records[i]->size = 0;
         }
     }
