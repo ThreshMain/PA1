@@ -20,6 +20,11 @@ typedef struct {
     int unique_count;
 } hash_map_t;
 
+typedef struct {
+    int capacity;
+    item_array_t **records;
+} map_t;
+
 unsigned int hash_string(char *str) {
     unsigned int hash = 149;
     char c;
@@ -52,19 +57,6 @@ void free_array(item_array_t *array) {
     }
     free(array->items);
     free(array);
-}
-
-item_t *get_last_item(item_array_t *array) {
-    if (array->size == 0) {
-        return NULL;
-    }
-    return array->items[array->size - 1];
-}
-
-void swap_items(item_array_t *array, int from, int to) {
-    item_t *item = array->items[from];
-    array->items[from] = array->items[to];
-    array->items[to] = item;
 }
 
 void resize_hash_map(hash_map_t *map) {
@@ -109,7 +101,7 @@ item_t *add_item(hash_map_t *map, char *name) {
     return bucket->items[bucket->size - 1];
 }
 
-hash_map_t *create_map(int bucket_size) {
+hash_map_t *create_hash_map(int bucket_size) {
     hash_map_t *map = (hash_map_t *) malloc(sizeof(hash_map_t));
     map->bucket_size = bucket_size;
     map->items = (item_array_t **) malloc(sizeof(item_array_t *) * bucket_size);
@@ -127,67 +119,50 @@ void free_hash_map(hash_map_t *map) {
     free(map);
 }
 
-void common_items_filter(item_array_t *common_items, int number_of_items) {
-    if (common_items->size > number_of_items) {
-        int new_size = number_of_items;
-        int count = common_items->items[new_size - 1]->count;
-        while (new_size < common_items->size && common_items->items[new_size]->count == count) {
-            new_size++;
-        }
-        common_items->size = new_size;
+map_t *create_map(int capacity) {
+    map_t *map = (map_t *) malloc(sizeof(map_t));
+    map->capacity = capacity;
+    map->records = (item_array_t **) malloc(sizeof(item_array_t *) * map->capacity);
+    for (int i = 0; i < map->capacity; ++i){
+        map->records[i] = create_array(1);
     }
+    return map;
 }
 
-int find_indexes(item_array_t *common_items, item_t *item) {
-    int left = 0;
-    int right = common_items->size - 1;
-    while (left <= right) {
-        int middle = (left + right) / 2;
-        if (common_items->items[middle] == item) {
-            return middle;
+void update_common_items(map_t *map, item_t *item, int number_of_items) {
+    if (map->capacity < item->count) {
+        int new_capacity = map->capacity * 2;
+        while (new_capacity < item->count) {
+            new_capacity *= 2;
         }
-        if (common_items->items[middle]->count > item->count - 1) {
-            left = middle + 1;
-        } else if (common_items->items[middle]->count < item->count - 1) {
-            right = middle - 1;
+        map->records = (item_array_t**) realloc(map->records, sizeof(item_array_t *) * new_capacity);
+        for (int i = map->capacity; i < new_capacity; ++i) {
+            map->records[i] = create_array(1);
+        }
+        map->capacity= new_capacity;
+    }
+    if(item->count>1){
+        item_array_t *old_quantity = map->records[item->count - 2];
+        for (int j = 0; j < old_quantity->size; ++j) {
+            if (old_quantity->items[j] == item) {
+                old_quantity->items[j] = old_quantity->items[old_quantity->size - 1];
+                old_quantity->size--;
+                break;
+            }
+        }
+    }
+    add_item_to_array(map->records[item->count-1], item);
+    int sum = 0;
+    for (int i = map->capacity-1; i >=0 ; --i) {
+        if (sum < number_of_items) {
+            sum += map->records[i]->size;
         } else {
-            int tmp = middle;
-            while (tmp > 0 && common_items->items[tmp]->count == item->count - 1) {
-                tmp--;
-                if (common_items->items[tmp] == item) {
-                    return tmp;
-                }
-            }
-            tmp = middle;
-            while (tmp < (common_items->size - 1) && common_items->items[tmp]->count == item->count - 1) {
-                tmp++;
-                if (common_items->items[tmp] == item) {
-                    return tmp;
-                }
-            }
-            return -1;
+            map->records[i]->size=0;
         }
     }
-    return -1;
 }
 
-void update_common_items(item_array_t *common_items, item_t *item, int number_of_items) {
-    int from = find_indexes(common_items, item);
-    if (from != -1) {
-        int to = from;
-        while (to > 0 && common_items->items[to-1]->count < item->count) {
-            to--;
-        }
-        if (to >= 0 && to != from) swap_items(common_items, from, to);
-    } else if (common_items->size < number_of_items || get_last_item(common_items)->count == item->count) {
-        add_item_to_array(common_items, item);
-        return;
-    }
-    common_items_filter(common_items, number_of_items);
-}
-
-
-int add_log_record(hash_map_t *map, item_array_t *common_items, int number_of_items) {
+int add_log_record(hash_map_t *map, map_t *common_items, int number_of_items) {
     char name[100];
     char space, new_line;
     int result = scanf("%c%99s%c", &space, name, &new_line);
@@ -201,41 +176,39 @@ int add_log_record(hash_map_t *map, item_array_t *common_items, int number_of_it
     return result;
 }
 
-void print_most_common_items(item_array_t *common_items) {
-    int count = -1;
-    int same_count_first = -1;
-    int same_count_last = 0;
-    for (int i = 0; i < common_items->size; ++i) {
-        if (count != common_items->items[i]->count) {
-            count = common_items->items[i]->count;
-            int same_count = 0;
-            same_count_first = same_count_last = i + 1;
-            while (same_count_last < common_items->size && common_items->items[same_count_last]->count == count) {
-                same_count_last++;
-                same_count++;
+void print_most_common_items(map_t *common_items) {
+    int current_position = 1;
+    int sum=0;
+    for (int i = common_items->capacity - 1; i >= 0; --i) {
+        item_array_t *array = common_items->records[i];
+        if (array->size != 0) {
+            for (int j = 0; j < array->size; ++j) {
+                printf("%d.", current_position);
+                if (array->size > 1) {
+                    printf("-%d. %s, %dx\n", current_position + array->size-1, array->items[j]->name,
+                           array->items[j]->count);
+                } else {
+                    printf(" %s, %dx\n", array->items[j]->name, array->items[j]->count);
+                }
+                sum+=array->items[j]->count;
             }
-            if (same_count == 0) {
-                same_count_last = 0;
-            }
+            current_position+=array->size;
         }
-        if (same_count_last >= i + 1) {
-            printf("%d.-%d.", same_count_first, same_count_last);
-        } else {
-            printf("%d.", i + 1);
-        }
-        printf(" %s, %dx\n", common_items->items[i]->name, count);
     }
+    printf("Nejprodavanejsi zbozi: prodano %d kusu\n", sum);
 }
 
-int sum_array(item_array_t *array) {
+int sum_map(map_t *map) {
     int sum = 0;
-    for (int i = 0; i < array->size; ++i) {
-        sum += array->items[i]->count;
+    for (int i = 0; i < map->capacity; ++i) {
+        for (int j = 0; j < map->records[i]->size; ++j) {
+            sum += map->records[i]->items[j]->count;
+        }
     }
     return sum;
 }
 
-int execute_operation(char operation, hash_map_t *map, item_array_t *common_items, int number_of_items) {
+int execute_operation(char operation, hash_map_t *map, map_t *common_items, int number_of_items) {
     int result;
     switch (operation) {
         case '+':
@@ -243,8 +216,10 @@ int execute_operation(char operation, hash_map_t *map, item_array_t *common_item
             break;
         case '#':
             print_most_common_items(common_items);
+            result = 1;
+            break;
         case '?':
-            printf("Nejprodavanejsi zbozi: prodano %d kusu\n", sum_array(common_items));
+            printf("Nejprodavanejsi zbozi: prodano %d kusu\n", sum_map(common_items));
             result = 1;
             break;
         default:
@@ -255,21 +230,25 @@ int execute_operation(char operation, hash_map_t *map, item_array_t *common_item
 }
 
 int parseLog() {
-    hash_map_t *map = create_map(128);
+    hash_map_t *map = create_hash_map(128);
     int result;
     int number_of_items = 0;
     char operation;
     printf("Pocet sledovanych:\n");
 
     if ((result = scanf("%d", &number_of_items)) == 1 && number_of_items > 0) {
-        item_array_t *common_items = create_array(number_of_items);
+        map_t *common_items = create_map(number_of_items);
         printf("Pozadavky:\n");
         while ((result = scanf(" %c", &operation)) == 1) {
             if ((result = execute_operation(operation, map, common_items, number_of_items) != 1)) {
                 break;
             }
         }
-        free(common_items->items);
+        for (int i = 0; i < common_items->capacity; ++i) {
+            free(common_items->records[i]->items);
+            free(common_items->records[i]);
+        }
+        free(common_items->records);
         free(common_items);
     }
     free_hash_map(map);
