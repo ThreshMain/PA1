@@ -2,57 +2,107 @@
 #include <string.h>
 #include <malloc.h>
 
+/**
+ * Multiplication factor used to resize array when full
+ */
 #define ARRAY_RESIZE_FACTOR 2
+/**
+ * Hash map resizing factor if count of unique elements divided by number of buckets
+ * is bigger then this factor Hash map will be resized
+ */
 #define HASH_MAP_LOAD_FACTOR 0.75
+/**
+ * Multiplication factor used to resize hash map when HASH_MAP_LOAD_FACTOR is reached,
+ * (number of buckets will be multiplied by this factor)
+ */
 #define HASH_RESIZE_FACTOR 2
 
 typedef struct {
+    /**
+     * Name of the item with maximum length of 99
+     */
     char name[100];
-    // Full hash of name for faster resize of the hash map
+    /**
+     * Full hash of the name for faster resize of the hash map
+     */
     unsigned int hash;
+    /**
+     * Count total number of occurrences
+     */
     int count;
-    // Initial value being -1 as not in the common_array
+    /**
+     * Index in the sorted common array.
+     * Used for printing most common items.
+     * Initial value being -1 as not in the common array
+     */
     int index_in_common_array;
 } item_t;
 
 typedef struct {
-    // Number of items in the array
+    /**
+     * Number of items in the array
+     */
     int size;
-    // Actual size of the array should be always bigger or equal to size
+    /**
+     * Actual size of the array should be always bigger or equal to size
+     */
     int capacity;
-    // Array of pointers to buckets
+    /**
+     * Array of pointers to items
+     */
     item_t **items;
 } item_array_t;
 
-// HashMap with item name as key and count as value
+/**
+ * HashMap with items,
+ * key is item->hash (generated from item->name),
+ * value is item->count
+ */
 typedef struct {
+    /**
+     * Buckets with items of same hash after modulo by number of current buckets
+     * resized when HASH_MAP_LOAD_FACTOR is reached and items moved accordingly.
+     */
     item_array_t **buckets;
+    /**
+     * Number of buckets in the hash map
+     */
     int bucket_size;
-    // Unique count to be able to resize the hash map if needed
+    /**
+     * Unique count to be able to resize the hash map if needed
+     */
     int unique_count;
 } hash_map_t;
 
 typedef struct {
-    // Number of items in the array
+    /**
+     * Number of items in the array
+     */
     int size;
-    // Actual size of the array should be always bigger or equal to size
+    /**
+     * Actual size of the array should be always bigger or equal to size
+     */
     int capacity;
     int *data;
 } int_array_t;
 
-/**
- * Array to store the most common items in ordered list
- * With indexes to the beginning of specific count part of the array
- */
 typedef struct {
+    /**
+     * Ordered list of items ordered by count from highest to lowest
+     */
     item_array_t *records;
+    /**
+     * indexes to the beginning of part of the array
+     * that will have items with count of the value of the !!(INDEX+1)!!
+     * for example indexes[2] will be the index of the first item with count of 3
+     */
     int_array_t *indexes;
 } common_array_t;
 
 /**
- * Calculates the hash of the string
+ * Calculates the hash of the NULL terminated string
  * @param str null terminated string
- * @return hash
+ * @return hash of the string
  */
 unsigned int hash_string(char *str) {
     unsigned int hash = 149;
@@ -138,6 +188,11 @@ void free_item_array(item_array_t *array) {
     free(array);
 }
 
+/**
+ * Free memory of the int array
+ * and data in it
+ * @param array initialized array
+ */
 void free_int_array(int_array_t *array) {
     free(array->data);
     free(array);
@@ -145,6 +200,7 @@ void free_int_array(int_array_t *array) {
 
 /**
  * Resizes the hash map by factor of HASH_RESIZE_FACTOR, if the load factor is bigger than HASH_MAP_LOAD_FACTOR
+ * and moves items to the new buckets according to their saved hash value
  * @param map initialized hash map
  */
 void resize_hash_map(hash_map_t *map) {
@@ -154,29 +210,40 @@ void resize_hash_map(hash_map_t *map) {
     item_array_t **old_items = map->buckets;
     int new_bucket_size = map->bucket_size * HASH_RESIZE_FACTOR;
     map->buckets = (item_array_t **) malloc(sizeof(item_array_t *) * new_bucket_size);
+    // initialize new buckets
     for (int i = 0; i < new_bucket_size; i++) {
         map->buckets[i] = create_item_array(1);
     }
+    // move items to the new buckets from the old buckets
     for (int i = 0; i < map->bucket_size; ++i) {
         item_array_t *bucket = old_items[i];
         for (int j = 0; j < bucket->size; ++j) {
             item_t *item = bucket->items[j];
+            // calculate new hash value based on the new bucket size
             unsigned int index = item->hash % (new_bucket_size);
             add_item_to_array(map->buckets[index], item);
         }
+        // free old bucket
         free(bucket->items);
         free(bucket);
     }
     map->bucket_size = new_bucket_size;
+    // free old bucket list
     free(old_items);
 }
 
 /**
- * Adds 1 to the count of the item if it already exists in the hash map
- * otherwise creates and adds the item to the hash map
+ * Finds item in the hash map by name:
+ * if item is found:
+ * - Adds 1 to the count of the item,
+ * else:
+ * - creates and the item
+ * - adds item to the hash map
+ * - updates unique count of items
+ *
  * @param map initialized hash map
  * @param name name of the item
- * @return item that was added or already existed
+ * @return modified/added item
  */
 item_t *add_item(hash_map_t *map, char *name) {
     unsigned int hash = hash_string(name);
@@ -195,8 +262,9 @@ item_t *add_item(hash_map_t *map, char *name) {
 }
 
 /**
- * Creates hash map and initializes the buckets
- * @param bucket_size initial size of the hash map
+ * Allocates memory for the hash map,
+ * and initializes the buckets
+ * @param bucket_size initial bucket count
  * @return new hash map
  */
 hash_map_t *create_hash_map(int bucket_size) {
@@ -210,8 +278,8 @@ hash_map_t *create_hash_map(int bucket_size) {
 }
 
 /**
- * Frees the hash map and all its items and buckets
- * @param map
+ * Frees the hash map, all buckets and all items inside buckets
+ * @param map initialized hash map
  */
 void free_hash_map(hash_map_t *map) {
     for (int i = 0; i < map->bucket_size; ++i) {
@@ -238,7 +306,7 @@ common_array_t *create_common_array(int capacity) {
 
 /**
  * Free memory of the common array,
- * does not free the items in it.
+ * !! does NOT free the items in it !!
  * @param map initialized common array
  */
 void free_common_array(common_array_t *map) {
@@ -278,16 +346,34 @@ int get_int_from_int_array(int_array_t *array, int index) {
     return array->data[index];
 }
 
+/**
+ * Updates common array with items.
+ * if item is already in the array:
+ * - moves item to correct position
+ * - updates indexes
+ * - updates item->index_in_common_array value
+ * if item is new:
+ *   checks if number of items isn't already satisfied,
+ *   if not adds item to the array
+ *
+ * @param map initialized common array
+ * @param item added/edited item
+ * @param number_of_items number of items to keep track about
+ */
 void update_common_items(common_array_t *map, item_t *item, int number_of_items) {
+    // if array is empty
     if (map->records->size == 0) {
         item->index_in_common_array = map->records->size;
         add_item_to_array(map->records, item);
-        add_int_to_array(map->indexes, map->records->size - 1);
+        add_int_to_array(map->indexes, 0);
         return;
     }
-
+    // if item is not inside array
     if (item->index_in_common_array == -1) {
+        // index of the first item with same count as current item
         int last_index = get_int_from_int_array(map->indexes, map->indexes->size - 1);
+        // if number of items is not satisfied or the last item inside array has same count as the current one
+        // add item to the array
         if (last_index < number_of_items ||
             map->records->items[last_index]->count == item->count) {
             item->index_in_common_array = map->records->size;
@@ -295,24 +381,34 @@ void update_common_items(common_array_t *map, item_t *item, int number_of_items)
         }
         return;
     }
+    // get index of the current item
     int from = item->index_in_common_array;
+    /**
+     * Get index of the first item with same count as current item
+     * and swap them
+     * NOTE: -2 because the count was updated so we need to get the previous one -1
+     * and indexes[0] means part with count 1 to save space since 1 is the minimal value so -2
+     */
     int to = get_int_from_int_array(map->indexes, item->count - 2);
-    if (from != to) {
-        swap_items(map->records, from, to);
-    }
+    swap_items(map->records, from, to);
+    // ensure there is enough space for index of the current count
+    // NOTE: -1 because the count was updated so we need to get the previous one
     get_int_from_int_array(map->indexes, item->count - 1);
     int previous_count = item->count - 2;
+    // update indexes
     map->indexes->data[previous_count]++;
 }
 
 /**
- * Reads input in in format of:
+ * Reads item name from user in format of:
  * space, up to 99 chars and new line
- * from user, logs the record and updates most common items.
+ * if any other format is given, it will return 0
+ *
+ * logs the item and updates most common items.
  * @param map to log the record
  * @param common_items to log the most common items
  * @param number_of_items the number of most common items to log
- * @return 3 if every thing worked, 0 on user input error, EOF if stream is at the end of file
+ * @return 3 if every thing worked, 0 on wrong input format, EOF if stream is at the end of file
  */
 int add_log_record(hash_map_t *map, common_array_t *common_items, int number_of_items) {
     char name[100];
@@ -329,47 +425,50 @@ int add_log_record(hash_map_t *map, common_array_t *common_items, int number_of_
 }
 
 /**
- * Prints the desired number of most common items that were logged
+ * Prints sum of desired number of most common items in format:
+ * Nejprodavanejsi zbozi: prodano $SUM kusu, new line
+ *
+ * and if print_items is true:
+ * prints the most common items that were logged in format of:
+ * position in the ordered list, dot, space, item name, space, count, new line
+ * if multiple items have the same count, the position will be printed
+ * as first item with that count, dot, dash, last item with that count, dot
  * @param map common_array
  * @param number_of_items number of desired items to be printed
+ * @param print_items
  */
-void print_most_common_items(common_array_t *map, int number_of_items) {
+void print_most_common_items(common_array_t *map, int number_of_items, char print_items) {
     int position = 1;
-    for (int i = map->indexes->size - 1; i >= 0; i--) {
-        int index = map->indexes->data[i];
-        int next_index = i >= 1 ? map->indexes->data[i - 1] : map->records->size;
-        int count = next_index - index;
-        if (index >= number_of_items) break;
-        if (count > 1) {
-            for (int j = 0; j < count; ++j) {
-                printf("%d.-%d. %s, %dx\n", position, position + count - 1,
-                       map->records->items[index + j]->name,
-                       map->records->items[index + j]->count);
-            }
-        } else if (count > 0) {
-            printf("%d. %s, %dx\n", position, map->records->items[index]->name,
-                   map->records->items[index]->count);
-        }
-        position += count;
-    }
-}
-
-/**
- * Counts the number of common items inside the array
- * @param map common_array
- * @param number_of_items number of desired items to be count
- * @return int sum
- */
-int common_items_sum(common_array_t *map, int number_of_items) {
     int sum = 0;
+    // Iterate from the end of the array of indexes since that's where the highest count is
     for (int i = map->indexes->size - 1; i >= 0; i--) {
+        // Get index of first item with the count of (i+1)
         int index = map->indexes->data[i];
-        int next_index = i >= 1 ? map->indexes->data[i - 1] : map->records->size;
-        int count = next_index - index;
+        // if index is bigger or equal to the number of items desired to be printed stop printing
         if (index >= number_of_items) break;
+        // Get the end of the part of the array with the same count
+        // if this is the last part then the end is the last element
+        int next_index = i >= 1 ? map->indexes->data[i - 1] : map->records->size;
+        // Count of the elements with same count
+        int count = next_index - index;
+        if (print_items) {
+            // If there is more elements with same count
+            if (count > 1) {
+                for (int j = 0; j < count; ++j) {
+                    printf("%d.-%d. %s, %dx\n", position, position + count - 1,
+                           map->records->items[index + j]->name,
+                           map->records->items[index + j]->count);
+                }
+            } else if (count > 0) {
+                printf("%d. %s, %dx\n", position, map->records->items[index]->name,
+                       map->records->items[index]->count);
+            }
+        }
+        // Move position by count of elements with same count
+        position += count;
         sum += (i + 1) * count;
     }
-    return sum;
+    printf("Nejprodavanejsi zbozi: prodano %d kusu\n", sum);
 }
 
 /**
@@ -387,10 +486,12 @@ int execute_operation(char operation, hash_map_t *map, common_array_t *common_it
             result = add_log_record(map, common_items, number_of_items);
             break;
         case '#':
-            print_most_common_items(common_items, number_of_items);
-        case '?':
-            printf("Nejprodavanejsi zbozi: prodano %d kusu\n", common_items_sum(common_items, number_of_items));
             result = 1;
+            print_most_common_items(common_items, number_of_items, 1);
+            break;
+        case '?':
+            result = 1;
+            print_most_common_items(common_items, number_of_items, 0);
             break;
         default:
             return 0;
