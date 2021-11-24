@@ -3,6 +3,11 @@
 #include <malloc.h>
 
 /**
+ * Maximum length of a string.
+ * The actual maximum length is one less than this value.
+ */
+#define MAX_STRING_LENGTH 100
+/**
  * Multiplication factor used to resize array when full
  */
 #define ARRAY_RESIZE_FACTOR 2
@@ -19,9 +24,9 @@
 
 typedef struct {
     /**
-     * Name of the item with maximum length of 99
+     * Name of the item with maximum length of MAX_STRING_LENGTH
      */
-    char name[100];
+    char name[MAX_STRING_LENGTH];
     /**
      * Full hash of the name for faster resize of the hash map
      */
@@ -116,7 +121,7 @@ unsigned int hash_string(char *str) {
 /**
  * Allocates memory for the item
  * and sets default values
- * @param name null terminated string max 99 chars long string
+ * @param name null terminated string max MAX_STRING_LENGTH chars long string
  * @param hash hash that should be used for hash map
  * @return item
  */
@@ -401,7 +406,7 @@ void update_common_items(common_array_t *map, item_t *item, int number_of_items)
 
 /**
  * Reads item name from user in format of:
- * space, up to 99 chars and new line
+ * space, up to MAX_STRING_LENGTH chars and new line
  * if any other format is given, it will return 0
  *
  * logs the item and updates most common items.
@@ -411,9 +416,11 @@ void update_common_items(common_array_t *map, item_t *item, int number_of_items)
  * @return 3 if every thing worked, 0 on wrong input format, EOF if stream is at the end of file
  */
 int add_log_record(hash_map_t *map, common_array_t *common_items, int number_of_items) {
-    char name[100];
+    char name[MAX_STRING_LENGTH];
     char space, new_line;
-    int result = scanf("%c%99s%c", &space, name, &new_line);
+    char format[32];
+    sprintf(format, "%%c%%%ds%%c", MAX_STRING_LENGTH - 1);
+    int result = scanf(format, &space, name, &new_line);
     if (result != 3 || space != ' ' || new_line != '\n') {
         if (result == EOF) return EOF;
         return 0;
