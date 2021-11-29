@@ -1,0 +1,11 @@
+FIT
+? 1 "Faculty of Information Technology"
+? 2 "Faculty of Information Technology"
+? 2 "FIT"
+? 3 "FIT"
+? 2   "Fibonacci   test"  
+? 2   "  Fibonacci   test   "  
+? 3 "Flux field inspection and particle affiliation department"
+# 4 "figure fits the first filter of floating firmware in the field width transistor to instance"
+# 1 "Stay fit!"
+#
