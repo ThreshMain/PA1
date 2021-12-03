@@ -279,6 +279,7 @@ hash_map_t *create_hash_map(int bucket_size) {
     for (int i = 0; i < bucket_size; ++i) {
         map->buckets[i] = create_item_array(1);
     }
+    map->unique_count = 0;
     return map;
 }
 
