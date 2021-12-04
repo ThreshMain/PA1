@@ -263,12 +263,14 @@ TRESULT *commonAncestors(TDATABASE *db,
                          int id2) {
     TPERSON *person1 = get_person(db->m_Hash_map, id1);
     if (person1 == NULL || (person1->m_Parent1 == NULL && person1->m_Parent2 == NULL)) return NULL;
+
+    TPERSON *person2 = get_person(db->m_Hash_map, id2);
+    if (person2 == NULL || (person2->m_Parent1 == NULL && person2->m_Parent2 == NULL)) return NULL;
+
     THASH_MAP *map1 = create_hash_map();
     add_ancestors(map1, person1->m_Parent1);
     add_ancestors(map1, person1->m_Parent2);
 
-    TPERSON *person2 = get_person(db->m_Hash_map, id2);
-    if (person2 == NULL || (person2->m_Parent1 == NULL && person2->m_Parent2 == NULL)) return NULL;
     THASH_MAP *map2 = create_hash_map();
     add_ancestors(map2, person2->m_Parent1);
     add_ancestors(map2, person2->m_Parent2);
