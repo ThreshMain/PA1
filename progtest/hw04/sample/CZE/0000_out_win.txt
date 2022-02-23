@@ -1,0 +1,24 @@
+Pozadavky:
+> prvni navsteva
+> prvni navsteva
+> prvni navsteva
+> prvni navsteva
+> navsteva #2
+> prvni navsteva
+> navsteva #2
+> 5 / 7
+> 5 / 6
+> 5 / 6
+> 4 / 5
+> 5 / 5
+> 4 / 4
+> 3 / 3
+> 2 / 2
+> 1 / 1
+> navsteva #2
+> navsteva #3
+> navsteva #3
+> navsteva #3
+> 5 / 11
+> 3 / 4
+Nespravny vstup.
